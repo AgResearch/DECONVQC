@@ -3,15 +3,15 @@
 Contributions are welcome. The following is a brief set of guidelines for contributing to DECONVQC 
 
 #Which GBS project to contribute to?  
-There are a number of community projects related to GBS. DECONVQC is limited in scope, focussing mainly 
+There are a number of community projects related to GBS. DECONVQC is limited in scope, focusing mainly 
 on immediate upstream Q/C and sequence delivery, rather than custom downstream analyses. If you are mainly 
 interested in contributing to a general purpose GBS research tool, we would encourage you to consider 
-contributing to one of the projects focussed on that goal such as the BBS project coordinated by the 
+contributing to one of the projects focused on that goal such as the BBS project coordinated by the 
 Elshire group and others. However contributions to the basic DECONVQC goal of high quality sequence 
 delivery are always welcome! 
 
 #Code of Conduct
-See code\_of\_conduct.md 
+See CODE\_OF\_CONDUCT.md 
 
 #Contribution areas: 
 #Database 
@@ -20,7 +20,7 @@ See code\_of\_conduct.md
 #Generic Sequence Q/C (i.e. not GBS-specific)
 ##Fastqc
 ##Alignment of sample against references
-##Contamination check - alkignment of random sample of reads against nt 
+##Contamination check - alignment of random sample of reads against nt 
 ##GBS Q/C 
 ###Tassel
 ###KGD
@@ -48,9 +48,9 @@ utility we are re-using - examples include
 The devops approach in this project is somewhat conservative, in the sense of trying to minimise 
 dependencies, to ensure that it is easy to run the process in the kind of standard real-time environment 
 often associated with sequencing machines (i.e. sequencing machine output must be processed 
-realiably within a day or two of the run completing; any faults will require weekend callout of 
+reliably within a day or two of the run completing; any faults will require weekend callout of 
 staff). So, while there are many specialist workflow systems that have advantages over makefiles, and 
-exicting new languages and libraries that may have some performance and other advantages over the languages 
+alternative languages and libraries that may have some performance and other advantages over the languages 
 and libraries used here, in this early stage we are consolidating essentially on makefiles, bash, R and python. In 
 suggesting enhancements, bear in mind the real-time production environment in which your enhancement 
 will be required to run, and that requirements for a highly customised dependency stack will probably 

@@ -1,4 +1,4 @@
-This repository contains scripts used to process and manage output sequence data and metadata related to Illumina hiseq and miseq machines, including running a number of GBS-specific Q/C steps for predominately GBS-related sequencing output. This project is focussed on immediate upstream Q/C and sequence delivery, rather than custom downstream analyses.
+This repository contains scripts used to process and manage output sequence data and metadata related to Illumina hiseq and miseq machines, including running a number of GBS-specific Q/C steps for predominately GBS-related sequencing output. This project is focused on immediate upstream Q/C and sequence delivery, rather than custom downstream analyses.
 
 Refer to DECONVQC.docx for more details
 
@@ -44,7 +44,7 @@ Below is a summary of the contents of the repository
 ##Alignment of sample against references
 * run\_mapping\_preview.sh  
 
-##Contamination check - alkignment of random sample of reads against nt 
+##Contamination check - alignment of random sample of reads against nt 
 * run\_sample\_contamination\_checks.sh
 * summarise\_global\_hiseq\_taxonomy.sh
 * summarise\_global\_hiseq\_taxonomy.py
