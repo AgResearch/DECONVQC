@@ -1,0 +1,132 @@
+/*
+
+we are using the agbrdf schema to help manage 
+GBS keyfiles.
+
+* A hiseq run is modelled as a sample list (biosamplelistob)
+* each sample 
+
+*/
+
+/*
+* set up table for keyfile data 
+*/
+/*
+create sequence keyfile_factidseq;
+insert into obtype (obtypeid , displayname, tablename, namedInstances, obtypedescription,isop)
+values(92,'GBS Keyfile Information','gbsKeyFileFact',FALSE, 'GBS Keyfile Information',TRUE);
+create table gbsKeyFileFact (
+   factid integer  DEFAULT nextval('keyfile_factidseq') primary key,   
+   biosampleob int not null references bioSampleOb(obid),
+   Flowcell varchar(32),
+   Lane int,
+   Barcode varchar(32),
+   Sample varchar(32),
+   PlateName varchar(32),
+   PlateRow varchar(32),
+   PlateColumn int,
+   LibraryPrepID int,
+   Counter int,
+   Comment varchar(256),
+   Enzyme varchar(32),
+   Species varchar(256),
+   NumberOfBarcodes varchar(4),
+   Bifo varchar(256),
+   Control varchar(64), 
+   Fastq_link varchar(256),
+   createddate date DEFAULT now(),
+   createdBy varchar(256),
+   voptypeid integer)
+   without oids;
+insert into optypesignature (   obtypeid , argobtypeid , optablecolumn )
+select 92,   obtypeid,   'biosampleob' from obtype where  upper(tablename) = 'BIOSAMPLEOB';
+*/
+
+/*
+* set up a table for sample sheet information thats related to each run
+*/
+/* 
+create sequence samplesheet_factidseq;
+insert into obtype (obtypeid , displayname, tablename, namedInstances, obtypedescription,isop)
+values(104,'Hiseq Samplesheet','hiseqSampleSheetFact',FALSE, 'Hiseq Samplesheet',TRUE);
+create table hiseqSampleSheetFact (
+   factid integer  DEFAULT nextval('samplesheet_factidseq') primary key,
+   biosamplelist int not null references bioSampleList(obid),
+   FCID varchar(32),
+   Lane int,
+   SampleID varchar(32),
+   SampleRef varchar(32),
+   SampleIndex int,
+   Description varchar(256),
+   Control varchar(32),
+   Recipe int,
+   Operator varchar(256),
+   SampleProject varchar(256),
+   createddate date DEFAULT now(),
+   createdBy varchar(256),
+   voptypeid integer)
+   without oids;
+insert into optypesignature (   obtypeid , argobtypeid , optablecolumn )
+select 104,   obtypeid,   'biosamplelist' from obtype where  upper(tablename) = 'BIOSAMPLELIST';
+*/
+
+
+/*
+* set up the import procedures 
+*/
+insert into importprocedureob(xreflsid, procedurename, procedurecomment)
+values('importKeyfile.sh','importKeyfile.sh','imports GBS keyfiles');
+insert into importprocedureob(xreflsid, procedurename, procedurecomment)
+values('importOrUpdateKeyfile.sh','importOrUpdateKeyfile.sh','imports GBS keyfiles (with optional update)');
+
+
+/* 
+set up temp tables used to move data into the schema
+*/
+
+create table keyfile_temp (
+   Flowcell varchar(32),
+   Lane int,
+   Barcode varchar(32),
+   Sample varchar(32),
+   PlateName varchar(32),
+   PlateRow varchar(32),
+   PlateColumn int,
+   LibraryPrepID int,
+   Counter int,
+   Comment varchar(256),
+   Enzyme varchar(32),
+   Species varchar(256),
+   NumberOfBarcodes varchar(4),
+   Bifo varchar(256),
+   control varchar(64),
+   Fastq_link varchar(256)) without oids; 
+
+create table keyfile_temp_nofastq (
+   Flowcell varchar(32),
+   Lane int,
+   Barcode varchar(32),
+   Sample varchar(32),
+   PlateName varchar(32),
+   PlateRow varchar(32),
+   PlateColumn int,
+   LibraryPrepID int,
+   Counter int,
+   Comment varchar(256),
+   Enzyme varchar(32),
+   Species varchar(256),
+   NumberOfBarcodes varchar(4),
+   Bifo varchar(256)) without oids;
+
+
+create table samplesheet_temp (
+   FCID varchar(32),
+   Lane int,
+   SampleID varchar(32),
+   SampleRef varchar(32),
+   SampleIndex int,
+   Description varchar(256),
+   Control varchar(32),
+   Recipe int,
+   Operator varchar(256),
+   SampleProject varchar(256)) without oids;

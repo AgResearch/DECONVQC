@@ -1,0 +1,27 @@
+/*
+* this script is called by an early stage of the gbs pipeline, which is setting up 
+* links to the key files. We receive a folder name like
+* /dataset/hiseq/scratch/postprocessing/150925_D00390_0235_BC6K0YANXX.gbs_in_progress/SQ0123.sample_in_progress/uneak_in_progress/key
+* - from this we parse a keyfile name 
+* It is called like
+* psql -U agrbrdf -d agrbrdf -h invincible -v gbs_key_link_folder="'/dataset/hiseq/scratch/postprocessing/150925_D00390_0235_BC6K0YANXX.gbs_in_progress/SQ0123.sample_in_progress/uneak_in_progress/key'" -f get_keyfilename.psql -q
+*
+*/
+\t
+select distinct 
+   split_part(
+      split_part(:gbs_key_link_folder,'/',7),
+      '.',1) || '.txt'
+from 
+   ((biosamplelist as l join biosamplelistmembershiplink m on 
+   m.biosamplelist = l.obid)  join biosampleob as b on 
+   b.obid = m.biosampleob ) join gbskeyfilefact as k on 
+   k.biosampleob = b.obid
+where
+   l.listname =    split_part(
+      split_part(:gbs_key_link_folder,'/',6),
+      '.',1) and
+   b.samplename =    split_part(
+      split_part(:gbs_key_link_folder,'/',7),
+      '.',1) ;
+

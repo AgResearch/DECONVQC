@@ -1,0 +1,20 @@
+\a
+\f '\t'
+\pset footer off
+\o /dataset/hiseq/scratch/postprocessing/sample_species.txt
+
+select 
+   samplename,
+   agg_comma_concat(species) as species
+from (
+   select distinct 
+      s.samplename,
+      g.species
+   from 
+      biosampleob s join gbsKeyFileFact g on 
+      g.biosampleob = s.obid 
+   ) as distinct_species
+group by 
+   samplename
+order by 
+   1

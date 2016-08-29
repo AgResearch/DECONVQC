@@ -1,0 +1,13 @@
+species	regexp 	colour	symbol	distance
+sheep	(sheep)	8DD3C7	A	
+salmon	(salmon)	FFED6F	F	
+cattle	(cattle)	BEBADA	C	
+deer	(deer)	FB8072	D	
+seal	(seal)	80B1D3	S	
+goat	(goat)	8DD3C7	G	
+mussel	(mussel)	B3DE69	M	
+pea	(pea)	FCCDE5	P	
+ryegrass	(ryegrass)	D9D9D9	R	
+clover	(clover)	BC80BD	T	
+weevil	(weevil)	CCEBC5	W	
+fungus	(endophyte)	FDB462	E	

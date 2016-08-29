@@ -1,0 +1,6 @@
+/*
+* this script extracts a keyfile   
+*/
+delete from gbsKeyFileFact  
+where 
+   biosampleob = (select obid from biosampleob where samplename = :keyfilename);

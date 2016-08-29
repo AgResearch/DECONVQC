@@ -1,0 +1,22 @@
+\a
+\f '\t'
+\pset footer off
+\o /dataset/hiseq/scratch/postprocessing/peacock_data.txt
+select
+ l.listname as run,
+ max(split_part(l.listname, '_', 3)) as run_number,
+ lane             ,
+ s.samplename       ,
+ max(species) as species         ,
+ max(l.listname || '.gbs/' || samplename || '.processed_sample/uneak') as uneak_path
+from
+   (gbskeyfilefact as g join biosampleob as s on g.biosampleob = 
+   s.obid )left outer join biosamplelist as l on
+   upper(l.listname) like '%'||upper(flowcell)||'%' and
+   l.listcomment = 'AgResearch Hiseq Run'
+group by 
+    l.listname ,
+    lane             ,
+    samplename        
+order by
+   2, 1, 3

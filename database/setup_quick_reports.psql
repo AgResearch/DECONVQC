@@ -1,0 +1,275 @@
+/*
+insert into datasourceob(
+ xreflsid     , 
+ datasourcename ,      
+ datasourcetype  , 
+ datasourcecomment , 
+ datasourcecontent 
+)
+values(
+ 'illumina_samplesheets_report1',
+ 'Illumina Sample Sheets Report',
+ 'SQL',
+ 'Query to extract hiseq/miseq sample-sheets',
+'select distinct
+   ''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || hss.sampleid || ''&context=default" target="sample">'' || hss.sampleid || ''</a>'' as sample_link,
+   ''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || bsl.xreflsid || ''&context=default" target="run">'' || bsl.xreflsid || ''</a>'' as run_link,
+   bsl.xreflsid as run_name,
+   hss.fcid ,
+   hss.lane ,
+   hss.sampleid ,
+   hss.sampleref ,
+   hss.sampleindex ,
+   hss.description,
+   hss.control,
+   hss.recipe ,
+   hss.operator ,
+   hss.sampleproject ,
+   hss.factid as dbid
+from
+   biosamplelist bsl join hiseqsamplesheetfact hss on hss.biosamplelist = bsl.obid
+order by
+   bsl.xreflsid,
+   hss.factid');
+*/
+/*
+insert into datasourceob(
+ xreflsid     ,
+ datasourcename ,
+ datasourcetype  ,
+ datasourcecomment ,
+ datasourcecontent
+)
+values(
+ 'gbs_keyfiles_report1',
+ 'GBS Keyfiles Report',
+ 'SQL',
+ 'Query to extract GBS keyfiles',
+ 'select
+   Flowcell,
+   Lane,
+   Barcode,
+   Sample,
+   PlateName,
+   PlateRow as Row,
+   PlateColumn as Column,
+   LibraryPrepID,
+   Counter,
+   Comment,
+   Enzyme,
+   Species,
+   NumberOfBarcodes,
+   Bifo,
+   Fastq_link
+from
+   biosampleob s join gbsKeyFileFact g on
+   g.biosampleob = s.obid
+order by
+   factid');
+*/
+
+/*
+insert into datasourceob(
+ xreflsid     ,
+ datasourcename ,
+ datasourcetype  ,
+ datasourcecomment ,
+ datasourcecontent
+)
+values(
+ 'illumina_runs_report1',
+ 'Illumina Runs Report',
+ 'SQL',
+ 'Query to extract list of hiseq runs',
+'select 
+   ''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || xreflsid || ''&context=default" target="run">'' || xreflsid || ''</a>'' as "Run Link",
+   createddate as "Date"
+from
+   biosamplelist
+where 
+   listcomment = ''AgResearch Hiseq Run''
+order by
+   createddate desc');
+*/
+
+/*
+insert into datasourceob(
+ xreflsid     ,
+ datasourcename ,
+ datasourcetype  ,
+ datasourcecomment ,
+ datasourcecontent
+)
+values(
+ 'illumina_species_report1',
+ 'Illumina Species Report',
+ 'SQL',
+ 'Query to extract species on samples',
+'
+select
+   samplename as "Sample/Plate Name",
+   agg_comma_concat(species) as species
+from (
+   select distinct
+      s.samplename,
+      g.species
+   from
+      biosampleob s join gbsKeyFileFact g on
+      g.biosampleob = s.obid
+   ) as distinct_species
+group by
+   samplename
+order by
+   1');
+
+*/
+
+/*
+select distinct 
+   '<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=' || hss.sampleid || '&context=default" target="sample">' || hss.sampleid || '</a>' as sample_link,
+   '<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=' || bsl.xreflsid || '&context=default" target="run">' || bsl.xreflsid || '</a>' as run_link,
+   bsl.xreflsid as run_name,
+   hss.fcid ,
+   hss.lane ,
+   hss.sampleid ,
+   hss.sampleref ,
+   hss.sampleindex ,
+   hss.description,
+   hss.control,
+   hss.recipe ,
+   hss.operator ,
+   hss.sampleproject ,
+   hss.factid as dbid
+from 
+   biosamplelist bsl join hiseqsamplesheetfact hss on hss.biosamplelist = bsl.obid 
+order by 
+   bsl.xreflsid,
+   hss.factid
+*/
+
+/*
+insert into datasourceob(
+ xreflsid     ,
+ datasourcename ,
+ datasourcetype  ,
+ datasourcecomment ,
+ datasourcecontent
+)
+values(
+ 'gbs_keyfiles_report2',
+ 'GBS Keyfiles Report (Tassel 5 format)',
+ 'SQL',
+ 'Query to extract GBS keyfiles in Tassel 5 format',
+'select
+   Flowcell,
+   Lane,
+   Barcode,
+   Sample,
+   PlateName,
+   PlateRow as Row,
+   PlateColumn as Column,
+   LibraryPrepID,
+   Counter,
+   Comment,
+   Enzyme,
+   Species,
+   NumberOfBarcodes,
+   Bifo,
+   Fastq_link,
+   Sample||'':''||Counter as FullSampleName
+from
+   biosampleob s join gbsKeyFileFact g on
+   g.biosampleob = s.obid
+order by
+   factid');
+
+update datasourceob set datasourcecontent = 
+'select
+   Flowcell,
+   Lane,
+   Barcode,
+   Sample,
+   PlateName,
+   PlateRow as Row,
+   PlateColumn as Column,
+   LibraryPrepID,
+   Counter,
+   Comment,
+   Enzyme,
+   Species,
+   NumberOfBarcodes,
+   Bifo,
+   case when control is null then '''' else control end  as Control,
+   Fastq_link,
+   Sample||'':''||Counter as FullSampleName
+from
+   biosampleob s join gbsKeyFileFact g on
+   g.biosampleob = s.obid
+order by
+   factid'
+where
+xreflsid = 'gbs_keyfiles_report2';
+
+
+
+
+*/
+/*
+
+insert into datasourceob(
+ xreflsid     ,
+ datasourcename ,
+ datasourcetype  ,
+ datasourcecomment ,
+ datasourcecontent
+)
+values(
+ 'gbs_enzymes_report1',
+ 'GBS Enzyme Report',
+ 'SQL',
+ 'Query to extract enzyme info crosschecking between sample sheet and keyfile and within keyfile',
+'select
+   ''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || bsl.xreflsid || ''&context=default" target="run">'' || bsl.listname || ''</a>'' as run_link,
+   ''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || s.xreflsid || ''&context=default" target="sample">'' || s.samplename || ''</a>'' as sample_link,
+   s.samplename as library,
+   max(enzyme) enzyme,
+   min(enzyme) enzyme_check,
+   max(h.description) enzyme_in_description 
+from 
+   (((biosamplelist as bsl join biosamplelistmembershiplink as l on l.biosamplelist = bsl.obid) join 
+   biosampleob as s on s.obid = l.biosampleob ) join 
+   hiseqsamplesheetfact as h on h.biosamplelist = bsl.obid) join gbskeyfilefact as g on 
+   g.biosampleob = s.obid
+where
+   bsl.listcomment = ''AgResearch Hiseq Run'' and 
+   s.sampletype = ''Illumina Library''
+group by 
+   bsl.listname,
+   s.samplename 
+order by 2,1');
+
+update datasourceob set datasourcecontent = 'select
+   max(''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || bsl.xreflsid || ''&context=default" target="run">'' || bsl.listname || ''</a>'') as run_link,
+   max(''<a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid='' || s.xreflsid || ''&context=default" target="sample">'' || s.samplename || ''</a>'') as library_link,
+   max(enzyme) enzyme,
+   min(enzyme) enzyme_check,
+   max(h.description) enzyme_in_description
+from
+   (((biosamplelist as bsl join biosamplelistmembershiplink as l on l.biosamplelist = bsl.obid) join
+   biosampleob as s on s.obid = l.biosampleob ) left outer join
+   hiseqsamplesheetfact as h on h.biosamplelist = bsl.obid and h.sampleref = s.samplename) join gbskeyfilefact as g on
+   g.biosampleob = s.obid
+where
+   bsl.listcomment = ''AgResearch Hiseq Run'' and
+   s.sampletype = ''Illumina Library''
+group by bsl.xreflsid, s.xreflsid 
+order by 2,1'
+where xreflsid = 'gbs_enzymes_report1';
+*/
+
+
+
+
+
+
+

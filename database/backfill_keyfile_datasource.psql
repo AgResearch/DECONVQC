@@ -1,0 +1,28 @@
+/*
+ensure all keyfiles are in as datasources 
+*/
+insert into datasourceob(xreflsid, datasourcename, datasourcetype,datasourcecomment)
+select
+   bs.samplename,
+   bs.samplename,
+   'GBS Keyfile',
+   'set up in arrears for samples imported earlier (script backfill_keyfile_datasource.psql)'
+from 
+   biosampleob bs where not exists (select obid from datasourceob where datasourcename = bs.samplename and datasourcetype = 'GBS Keyfile') and
+   bs.sampletype = 'Illumina Library';
+
+insert into importfunction(xreflsid,datasourceob, ob, importprocedureob,functioncomment)
+select
+   bs.samplename || ':' || ds.datasourcename,
+   ds.obid,
+   bs.obid,
+   ip.obid,
+   '(imported by backfill_keyfile_datasource.psql)'
+from
+   (datasourceob ds join biosampleob bs on
+   ds.xreflsid = bs.samplename) join
+   importprocedureob ip on ip.xreflsid = 'importKeyfile.sh'
+where 
+   ds.datasourcetype = 'GBS Keyfile' and
+   bs.sampletype = 'Illumina Library' and
+   ds.createddate = '2015-11-16';
