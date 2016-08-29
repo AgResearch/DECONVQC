@@ -74,6 +74,9 @@ Below is a summary of the contents of the repository
 * process\_hiseq1.0.sh     
 * gbs\_hiseq1.0.sh      
 * archive\_hiseq1.0.sh  
+* process\_hiseq1.0.mk     
+* gbs\_hiseq1.0.mk      
+* archive\_hiseq1.0.mk  
 * get\_processing\_parameters.py  
 * species\_config.txt
 
