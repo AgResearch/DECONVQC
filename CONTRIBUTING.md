@@ -36,9 +36,9 @@ See CODE\_OF\_CONDUCT.md
 In many cases contributions should be directed to the relevant project that provides the 
 utility we are re-using - examples include  
 
-* Tassel
-* KGD
-* prbdf
+* [Tassel](http://www.maizegenetics.net/tassel)
+* [KGD] (https://github.com/AgResearch/KGD)
+* [prbdf] (https://github.com/AgResearch/prbdf)
 * brdf database schema 
 
 
