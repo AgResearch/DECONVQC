@@ -7,7 +7,6 @@
 # -endPlugin -runfork1
 
 # convenience wrapper to cat a tag-count file 
-GBS_BIN=/bifo/active/hiseq/bin/hiseq_pipeline
 
 function get_opts() {
 
@@ -52,6 +51,11 @@ done
 }
 
 function check_opts() {
+  if [ -z "$GBS_BIN" ]; then
+    echo "GBS_BIN not set - quitting"
+    exit 1
+  fi
+
   if [ -z "$infile" ]; then
     echo "must specify an input file "
     exit 1

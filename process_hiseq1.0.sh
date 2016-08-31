@@ -56,15 +56,17 @@ done
 
 HISEQ_ROOT=/dataset/${MACHINE}/active
 BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
-GBS_BIN=/dataset/hiseq/active/bin/hiseq_pipeline
-export GBS_BIN
-
 
 }
 
 
 function check_opts() {
 # check args
+if [ -z "$GBS_BIN" ]; then
+   echo "GBS_BIN not set - quitting"
+   exit 1
+fi
+
 if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "mapping" ) && ( $ANALYSIS != "contamination" ) ]]; then
     echo "Invalid analysis name - must be mapping , contamination or all " >&2
     exit 1

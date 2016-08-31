@@ -1,6 +1,10 @@
 #!/bin/sh
 
-GBS_BIN=/dataset/hiseq/active/bin/hiseq_pipeline
+if [ -z "$GBS_BIN" ]; then
+   echo "GBS_BIN not set - quitting"
+   exit 1
+fi
+
 BUILD_ROOT=/dataset/hiseq/scratch/postprocessing 
 THIS_RUN=$1
 

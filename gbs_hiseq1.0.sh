@@ -53,12 +53,15 @@ done
 
 HISEQ_ROOT=/dataset/${MACHINE}/active
 BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
-GBS_BIN=/dataset/hiseq/active/bin/hiseq_pipeline
-export GBS_BIN
 }
 
 
 function check_opts() {
+if [ -z "$GBS_BIN" ]; then
+   echo "GBS_BIN not set - quitting"
+   exit 1
+fi
+
 # check args
 if [[ ( $TASK != "uneak" )  && ( $TASK != "all" )  && ( $TASK != "uneak_and_db_update" ) && ( $TASK != "db_update" ) ]]; then
     echo "Invalid task name - must be uneak, all, uneak_and_db_update, db_update " 

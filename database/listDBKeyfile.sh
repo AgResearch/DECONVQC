@@ -48,7 +48,8 @@ done
 
 function check_opts() {
    if [ -z "$GBS_BIN" ]; then
-      GBS_BIN=/dataset/hiseq/active/bin/hiseq_pipeline
+      echo "GBS_BIN not set - quitting"
+      exit 1
    fi
 
    if [ -z $SAMPLE ]; then

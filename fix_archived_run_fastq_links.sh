@@ -47,8 +47,14 @@ HISEQ_ROOT=/dataset/${MACHINE}/active
 #ARCHIVE_ROOT=/dataset/${MACHINE}/archive/run_archives
 ARCHIVE_ROOT=/bifo/archive/${MACHINE}/run_archives
 LINK_FARM=/dataset/hiseq/active/fastq-link-farm
-GBS_BIN=/dataset/hiseq/active/bin/hiseq_pipeline
 export GBS_BIN
+}
+
+function check_opts() {
+   if [ -z "$GBS_BIN" ]; then
+      echo "GBS_BIN not set - quitting"
+      exit 1
+   fi
 }
 
 function echo_opts() {
@@ -112,5 +118,6 @@ set +x
 }
 
 get_opts $@
+check_opts
 echo_opts
 fix_links
