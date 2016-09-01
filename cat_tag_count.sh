@@ -16,8 +16,12 @@ help_text="
  (stdout / stderr of the process itself is written to /tmp/*.cat_tag_count_stderr)
  
  examples : \n
- ./cat_tag_count.sh /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt 
- ./cat_tag_count.sh -O fasta /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt 
+ # just list the raw text tag file
+ ./cat_tag_count.sh /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
+ # produce a redundant fasta listing of tags (i.e. each is listed as a sequence N times, N its tag count)
+ ./cat_tag_count.sh -O fasta /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
+ # print out the total count of all tags 
+ ./cat_tag_count.sh -O count /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
 "
 
 FORMAT="text"
@@ -64,8 +68,8 @@ function check_opts() {
     echo "$infile not found"
     exit 1
   fi
-  if [[ $FORMAT != "text" && $FORMAT != "fasta" ]]; then
-    echo "FORMAT must be text or fasta"
+  if [[ $FORMAT != "text" && $FORMAT != "fasta"  && $FORMAT != "count" ]]; then
+    echo "FORMAT must be text , fasta or count"
     exit 1
   fi
 
@@ -116,6 +120,8 @@ nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i "$infile" -o $f1 -t TagCoun
 #start process to read fifo and list to stdout
 if [ $FORMAT == "text" ]; then
    cat <$f1
+elif [ $FORMAT == "count" ]; then
+   awk '{ if(NF == 3) {sum += $3} } END { print sum }' $f1
 elif [ $FORMAT == "fasta" ]; then
    cat <$f1 | $GBS_BIN/tags_to_fasta.py
 fi
