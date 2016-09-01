@@ -7,7 +7,7 @@ select
  max(split_part(l.listname, '_', 3)) as run_number,
  lane             ,
  s.samplename       ,
- max(species) as species         ,
+ agg_comma_concat(species) as species         ,
  max(l.listname || '.gbs/' || samplename || '.processed_sample/uneak') as uneak_path
 from
    (gbskeyfilefact as g join biosampleob as s on g.biosampleob = 

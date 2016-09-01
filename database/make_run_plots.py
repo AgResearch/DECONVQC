@@ -103,11 +103,20 @@ def generate_run_plot(options):
         with open(options["key_file_summary"][0],"r") as in_stream:
             # get an iteration of dictionaries - this parses the tab-delimited file as
             # an iteration of 
-            #{'lane': '6', 'run_number': '0286', 'run': '140818_SN871_0286_AC4U86ACXX', 'samplename': 'SQ0006', 'image_file_name': '140818_SN871_0286_AC4U86ACXX.gbs/SQ0006.processed_sample/uneak\n', 'species': 'Cattle'}
-            #{'lane': '7', 'run_number': '0286', 'run': '140818_SN871_0286_AC4U86ACXX', 'samplename': 'SQ0007', 'image_file_name': '140818_SN871_0286_AC4U86ACXX.gbs/SQ0007.processed_sample/uneak\n', 'species': 'Deer'}
+            #{'lane': '6', 'run_number': '0286', 'run': '140818_SN871_0286_AC4U86ACXX', 'samplename': 'SQ0006', 'image_file_name': '140818_SN871_0286_AC4U86ACXX.gbs/SQ0006.processed_sample/uneak\n', 'species': 'Cattle,Cattle,Cattle....'}
+            #{'lane': '7', 'run_number': '0286', 'run': '140818_SN871_0286_AC4U86ACXX', 'samplename': 'SQ0007', 'image_file_name': '140818_SN871_0286_AC4U86ACXX.gbs/SQ0007.processed_sample/uneak\n', 'species': 'Deer,Deer,Deer,...'}
             # etc
+            # (the species column in the key-file summary contains a comma-separated list of 
+            # all species listed in the keyfile. This is condensed below)
             sample_iter = (dict(zip(("run","run_number","lane","samplename","species","uneak_path"), re.split("\t", record.strip()))) for record in in_stream)
             sample_iter.next() # skip heading 
+            
+            # mak a list so we can add a species summary field - e.g. this will summarise 'sheep,sheep,cattle' as
+            # 'cattle=1, sheep=2'
+            sample_list = list(sample_iter)
+            for sample in sample_list:
+                sample["species_summary"] = ",".join(["=".join((group[0], str(len(list(group[1]))))) for group in itertools.groupby(sorted(re.split(",",sample["species"])))])
+            sample_iter = (item for item in sample_list)
 
             # group by run
             run_iter = itertools.groupby(sample_iter, lambda sample_record:sample_record["run"])
@@ -146,7 +155,7 @@ def generate_run_plot(options):
                                 samples[0].update(options)
                                 stats["found file count"] += 1
                                 print >> out_stream, """
-            <h3 align=center> %(species)s </h3> <h4 align=center> <font size=-2>
+            <h3 align=center> %(species_summary)s </h3> <h4 align=center> <font size=-2>
             %(run)s <a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=%(samplename)s&context=default"> %(samplename)s </a>
             </font></h4> 
             <img src="""%samples[0] + relname + """ height="%(image_height)s" width="%(image_width)s"/>
