@@ -97,7 +97,7 @@ set -x
         fifo=${FIFO_PREFIX}.sampling.fifo
         mkfifo $fifo
         $GBS_BIN/cat_tag_count.sh -O fasta $tag_count_file > $fifo &
-        ~/tardis/tardis/tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
+        tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
         rm -f $fifo
    (** dry run **)
 "
@@ -108,7 +108,7 @@ set -x
         fifo=${FIFO_PREFIX}.sampling.fifo
         mkfifo $fifo
         $GBS_BIN/cat_tag_count.sh -O fasta $tag_count_file > $fifo &
-        ~/tardis/tardis/tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
+        tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
         rm -f $fifo
     fi
 set +x
@@ -121,10 +121,10 @@ set -x
     if [ $DRY_RUN == "yes" ]; then
         echo "will execute
 
-        ~/tardis/tardis/tardis.py -w -d $OUTPUT_DIR blastn -query _condition_fasta_input_$sample_file -num_threads 2 -db nt  -evalue 1.0e-10 -dust \'20 64 1\' -max_target_seqs 1 -outfmt  \'7 qseqid sseqid pident evalue staxids sscinames scomnames sskingdoms stitle\' -out _condition_text_output_$OUTPUT_DIR/${tag_base}.out
+        tardis.py -w -d $OUTPUT_DIR blastn -query _condition_fasta_input_$sample_file -num_threads 2 -db nt  -evalue 1.0e-10 -dust \'20 64 1\' -max_target_seqs 1 -outfmt  \'7 qseqid sseqid pident evalue staxids sscinames scomnames sskingdoms stitle\' -out _condition_text_output_$OUTPUT_DIR/${tag_base}.out
     "
     else
-        ~/tardis/tardis/tardis.py -w -d $OUTPUT_DIR blastn -query _condition_fasta_input_$sample_file -num_threads 2 -db nt  -evalue 1.0e-10 -dust \'20 64 1\' -max_target_seqs 1 -outfmt  \'7 qseqid sseqid pident evalue staxids sscinames scomnames sskingdoms stitle\' -out _condition_text_output_$OUTPUT_DIR/${tag_base}.out
+        tardis.py -w -d $OUTPUT_DIR blastn -query _condition_fasta_input_$sample_file -num_threads 2 -db nt  -evalue 1.0e-10 -dust \'20 64 1\' -max_target_seqs 1 -outfmt  \'7 qseqid sseqid pident evalue staxids sscinames scomnames sskingdoms stitle\' -out _condition_text_output_$OUTPUT_DIR/${tag_base}.out
     fi
 set +x
 }
