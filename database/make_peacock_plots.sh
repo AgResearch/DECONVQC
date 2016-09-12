@@ -1,11 +1,19 @@
 #!/bin/bash
 
 PEACOCK_DATA=$1
+if [ -z $PEACOCK_DATA ]; then
+   echo "usage : make_peacock_plots.sh peacock_data_file"
+   exit 1
+fi
 if [ ! -f $PEACOCK_DATA ]; then
    echo "make_peacock_plots.sh : input data $PEACOCK_DATA not found"
    exit 1
 fi
 
+if [ -z "$GBS_BIN" ]; then
+   echo "GBS_BIN not set - exiting"
+   exit 1
+fi
 
 echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
    \"httpd://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
@@ -36,6 +44,19 @@ for plot_file in 'KGD/MAFHWdgm.05.png' 'KGD/SNPDepthHist.png' 'KGD/AlleleFreq.pn
    base=`basename $plot_file`
    suffix=`basename $base .png`
    $GBS_BIN/database/make_peacock_plots.py -f $plot_file -o /dataset/hiseq/scratch/postprocessing/peacock_${suffix}.html $PEACOCK_DATA
+   echo "<li> <a href=peacock_${suffix}.html> ${suffix} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_index.html
+done
+
+echo "
+<p/>
+<h2> Sample blast plots </h2> " >> /dataset/hiseq/scratch/postprocessing/peacock_index.html
+
+for plot_file in 'blast_analysis/sample_blast_summary.jpg' ; do
+   base=`basename $plot_file`
+   suffix=`basename $base .jpg`
+set -x
+   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -o /dataset/hiseq/scratch/postprocessing/peacock_${suffix}.html $PEACOCK_DATA 
+set +x
    echo "<li> <a href=peacock_${suffix}.html> ${suffix} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_index.html
 done
 
