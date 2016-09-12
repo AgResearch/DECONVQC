@@ -62,10 +62,11 @@ def get_sample_tax_distribution(sample_tax_summaries, measure):
     #print all_taxa_list
 
     if measure == "frequency":
-        sample_tax_distributions = [["%s\t%s"%item for item in all_taxa_list]] + [ Distribution.load(sample_tax_summary).get_frequency_projection(all_taxa_list) for sample_tax_summary in sample_tax_summaries]
+        #sample_tax_distributions = [["%s\t%s"%item for item in all_taxa_list]] + [ Distribution.load(sample_tax_summary).get_frequency_projection(all_taxa_list) for sample_tax_summary in sample_tax_summaries]
+        sample_tax_distributions = [[re.sub("'|#","","%s\t%s"%item) for item in all_taxa_list]] + [ Distribution.load(sample_tax_summary).get_frequency_projection(all_taxa_list) for sample_tax_summary in sample_tax_summaries]
     else:
-        sample_tax_distributions = [["%s\t%s"%item for item in all_taxa_list]] + [ Distribution.load(sample_tax_summary).get_unsigned_information_projection(all_taxa_list) for sample_tax_summary in sample_tax_summaries]
-
+        #sample_tax_distributions = [["%s\t%s"%item for item in all_taxa_list]] + [ Distribution.load(sample_tax_summary).get_unsigned_information_projection(all_taxa_list) for sample_tax_summary in sample_tax_summaries]
+        sample_tax_distributions = [[re.sub("'|#","","%s\t%s"%item) for item in all_taxa_list]] + [ Distribution.load(sample_tax_summary).get_unsigned_information_projection(all_taxa_list) for sample_tax_summary in sample_tax_summaries]
 
     #print sample_tax_distributions
 
@@ -163,8 +164,6 @@ INV-D00390:220:C6GKKANXX:8:1114:18656:89413     gi|688443106|emb|LL194098.1|    
 def main():
     args=get_options()
 
-    filename = args["filename"][0]
-    
     #test = my_top_hit_provider(filename, 0,7,6)
     #test = my_hit_provider(filename, 0,7,6)
     #for record in test:
@@ -173,10 +172,10 @@ def main():
     #return
 
     if args["summary_type"] == "sample_summaries" :
-        tax_dist = build_tax_distribution(filename)
-        print tax_dist
-
-        write_summaries(filename,tax_dist)
+        for filename in  args["filename"]:
+            tax_dist = build_tax_distribution(filename)
+            print tax_dist
+            write_summaries(filename,tax_dist)
     elif args["summary_type"] == "summary_table" :
         #print "summarising %s"%str(args["filename"])
         get_sample_tax_distribution(args["filename"], args["measure"])
