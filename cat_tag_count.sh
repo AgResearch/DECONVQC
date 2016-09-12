@@ -75,8 +75,8 @@ function check_opts() {
 
   # tassel cannot handle files with spaces in them - we will need to make a shortcut
   #newname=""
-  echo "$infile" | grep " " > /dev/null 2>&1 
   remove_temp=0
+  echo "$infile" | grep " " > /dev/null 2>&1 
   if [ $? == 0 ]; then
      #despaced_name=`echo "$infile" | sed 's/ /_/g' -`
      #newname=`basename $despaced_name`
