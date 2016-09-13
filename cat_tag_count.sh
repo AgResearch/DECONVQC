@@ -78,12 +78,8 @@ function check_opts() {
   remove_temp=0
   echo "$infile" | grep " " > /dev/null 2>&1 
   if [ $? == 0 ]; then
-     #despaced_name=`echo "$infile" | sed 's/ /_/g' -`
-     #newname=`basename $despaced_name`
-     #rm -f /tmp/$newname
-     prefix=`mktemp -u`
-     prefix=`basename $prefix`
-     temp_name=/tmp/$prefix.cnt
+     nametmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_links`
+     temp_name=`mktemp --tmpdir=$nametmpdir`
      ln -s "$infile" $temp_name
      infile=$temp_name 
      remove_temp=1
@@ -98,38 +94,39 @@ check_opts
 # now cat the file 
 
 # set up a fifo to pass to tassel as its outfile
-FIFO_PREFIX=`mktemp -u` 
-FIFO_PREFIX=`basename $FIFO_PREFIX` 
-FIFO_PREFIX=/tmp/$FIFO_PREFIX 
-f1=${FIFO_PREFIX}.f1 
-mkfifo $f1 
+tmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_fifos`
+fifo=`mktemp --tmpdir=$tmpdir`
+rm -f $fifo
+mkfifo $fifo
 
 # set up a file for the stdout / stderr of this run
 OUT_PREFIX=`mktemp -u`
 OUT_PREFIX=`basename $OUT_PREFIX`
 OUT_PREFIX=/tmp/$OUT_PREFIX
-errfile=${OUT_PREFIX}.cat_tag_count_stderr
+errfile=`mktemp --tmpdir=/tmp XXXXXXXXXXXXXX.cat_tag_count_stderr`
 
 
 #load tassel3
 module load tassel/3
 
 #start tassel process to write text to fifo, running in background
-nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i "$infile" -o $f1 -t TagCounts -endPlugin -runfork1 >$errfile 2>&1 &
+nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i "$infile" -o $fifo -t TagCounts -endPlugin -runfork1 >$errfile 2>&1 &
 
 #start process to read fifo and list to stdout
 if [ $FORMAT == "text" ]; then
-   cat <$f1
+   cat <$fifo
 elif [ $FORMAT == "count" ]; then
-   awk '{ if(NF == 3) {sum += $3} } END { print sum }' $f1
+   awk '{ if(NF == 3) {sum += $3} } END { print sum }' $fifo
 elif [ $FORMAT == "fasta" ]; then
-   cat <$f1 | $GBS_BIN/tags_to_fasta.py
+   cat <$fifo | $GBS_BIN/tags_to_fasta.py
 fi
 
 # clean up
-rm $f1
+rm -f $fifo
+rmdir $tmpdir
 
 if [ $remove_temp == 1 ]; then
    rm -f $temp_name
+   rmdir $nametmpdir
 fi
 
