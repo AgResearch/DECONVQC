@@ -11,7 +11,7 @@ help_text="
 SAMPLE_SIZE=500
 DRY_RUN=no
 OUTPUT_DIR=`pwd`
-TASK=blast
+TASK=sample_and_blast
 
 while getopts ":nhN:D:O:T:" opt; do
   case $opt in
@@ -47,6 +47,9 @@ done
 
 HISEQ_ROOT=/dataset/${MACHINE}/active
 BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
+if [  $TASK != "summarise" ]; then
+   fifo_dir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.blast_analyse_samples_fifos`
+fi
 }
 
 function check_opts() {
@@ -59,11 +62,10 @@ if [ -z "$GBS_BIN" ]; then
    echo "GBS_BIN not set - quitting"
    exit 1
 fi
-if [[ $TASK  != "summarise" && $TASK != "blast"  && $TASK != "sample" ]]; then
-   echo "task must be blast or summarise"
+if [[ $TASK  != "summarise" && $TASK != "blast"  && $TASK != "sample"  && $TASK != "sample_and_blast" ]]; then
+   echo "task must be summarise, blast, sample or sample_and_blast"
    exit 1
 fi
-
 }
 
 
@@ -74,6 +76,9 @@ function echo_opts() {
     echo "sample : $SAMPLE"
     echo "task : $TASK"
     echo "results will be written to : $OUTPUT_DIR"
+    if [  $TASK != "summarise" ]; then
+        echo "fifos will be created in $fifo_dir" 
+    fi
 }
 
 function configure_env() {
@@ -91,10 +96,8 @@ set -x
 
     if [ $DRY_RUN == "yes" ]; then
         echo " will execute: 
-        FIFO_PREFIX=`mktemp -u`
-        FIFO_PREFIX=`basename $FIFO_PREFIX`
-        FIFO_PREFIX=/tmp/$FIFO_PREFIX
-        fifo=${FIFO_PREFIX}.sampling.fifo
+        fifo=`mktemp --tmpdir=$fifo_dir`
+        rm -f $fifo
         mkfifo $fifo
         $GBS_BIN/cat_tag_count.sh -O fasta $tag_count_file > $fifo &
         tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
@@ -102,10 +105,8 @@ set -x
    (** dry run **)
 "
     else
-        FIFO_PREFIX=`mktemp -u`
-        FIFO_PREFIX=`basename $FIFO_PREFIX`
-        FIFO_PREFIX=/tmp/$FIFO_PREFIX
-        fifo=${FIFO_PREFIX}.sampling.fifo
+        fifo=`mktemp --tmpdir=$fifo_dir`
+        rm -f $fifo
         mkfifo $fifo
         $GBS_BIN/cat_tag_count.sh -O fasta $tag_count_file > $fifo &
         tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
@@ -128,6 +129,21 @@ set -x
     fi
 set +x
 }
+
+
+function wait_for_result() {
+set -x
+    tag_base=`basename $tag_count_file`
+    if [ $DRY_RUN == "yes" ]; then
+        echo "will execute
+        tardis.py -w -d $OUTPUT_DIR ls _condition_wait_output_$OUTPUT_DIR/${tag_base}.out.gz
+    "
+    else
+        tardis.py -w -d $OUTPUT_DIR ls _condition_wait_output_$OUTPUT_DIR/${tag_base}.out.gz
+    fi
+set +x
+}
+
 
 
 function summarise() {
@@ -158,11 +174,27 @@ if [ $TASK == "sample" ]; then
     done
 elif [ $TASK == "summarise" ]; then
     summarise
-elif [ $TASK == "blast" ]; then
+elif [ $TASK == "sample_and_blast" ]; then
     for tag_count_file in $DATA_DIR/*.cnt; do
         get_sample
         run_blast &
     done
+    # synchronously wait for results
+    for tag_count_file in $DATA_DIR/*.cnt; do
+        wait_for_result
+    done
+elif [ $TASK == "blast" ]; then
+    for tag_count_file in $DATA_DIR/*.cnt; do
+        run_blast &
+    done
+    # synchronously wait for the results
+    for tag_count_file in $DATA_DIR/*.cnt; do
+        wait_for_result
+    done
 elif [ $TASK == "summarise" ]; then 
     summarise
+fi
+
+if [  $TASK != "summarise" ]; then
+    rm -rf $fifo_dir 
 fi

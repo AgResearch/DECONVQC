@@ -150,16 +150,17 @@ versions.log:
 	./check_uneak_run.sh $< global
 	mv $< $@
 
-%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis   %.sample_in_progress/uneak_in_progress/blast_analysis
+%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg   %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg
 	# check it looks ok
 	echo "checking $@"
 
-%.sample_in_progress/uneak_in_progress/blast_analysis:  %.sample_in_progress/uneak_in_progress/KGD
+%.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg:  %.sample_in_progress/uneak_in_progress/KGD
 	mkdir -p $@
 	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $</../tagCounts/ -O $@
 	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $@
+	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla $(GBS_BIN)/blast_summary_heatmap.r datafolder=$<
 
-%.sample_in_progress/uneak_in_progress/kmer_analysis:  %.sample_in_progress/uneak_in_progress/KGD
+%.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg:  %.sample_in_progress/uneak_in_progress/KGD
 	mkdir -p $@
 	$(GBS_BIN)/kmer_entropy.py -b $@ -t zipfian -k 6 -p 1 -o $@/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt
 	$(GBS_BIN)/kmer_entropy.py -b $@ -t frequency -k 6 -p 1 -o $@/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt
