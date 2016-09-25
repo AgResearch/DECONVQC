@@ -80,6 +80,7 @@ function check_opts() {
   if [ $? == 0 ]; then
      nametmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_links`
      temp_name=`mktemp --tmpdir=$nametmpdir`
+     rm -f $temp_name
      ln -s "$infile" $temp_name
      infile=$temp_name 
      remove_temp=1
