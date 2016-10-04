@@ -40,8 +40,7 @@ echo $runs
 for run in $runs; do
    if [ -d $BUILD_ROOT/${run}.gbs ]; then
    args=""
-   tag_count_summaries=`find $BUILD_ROOT/${run}.gbs -name "TagCount.csv" -print`
-   for file in $tag_count_summaries; do
+   for file in $BUILD_ROOT/${run}.gbs/*/uneak/TagCount.csv; do
       args="$args $file"
    done
    if [ ! -z "$args" ]; then
