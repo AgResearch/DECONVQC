@@ -12,11 +12,15 @@ SAMPLE_SIZE=500
 DRY_RUN=no
 OUTPUT_DIR=`pwd`
 TASK=sample_and_blast
+FORCE=no
 
-while getopts ":nhN:D:O:T:" opt; do
+while getopts ":nhN:D:O:T:f" opt; do
   case $opt in
     n)
       DRY_RUN=yes
+      ;;
+    f)
+      FORCE=yes
       ;;
     N)
       SAMPLE_SIZE=$OPTARG
@@ -85,21 +89,40 @@ function configure_env() {
     module load tassel/3/3.0.173
 }
 
+function get_canonical_tag_base() {
+    # make a tab base name that has no embedded spaces or selected 
+    # shell metacharacters 
+    infile=$1
+    shift
+    while [ ! -z "$1" ]; do
+       infile="$infile $1"
+       shift
+    done
+
+    tag_base=`echo "$infile"  | sed 's/[() ]/_/g' -`
+    tag_base=`basename $tag_base`
+}
+
 function get_sample() {
 set -x
-    # get number of tags in file
-    tag_count=`$GBS_BIN/cat_tag_count.sh -O count $tag_count_file`
+    get_canonical_tag_base "$tag_count_file"
 
+    if [ -f $OUTPUT_DIR/${tag_base}_sample.fa.gz ]; then
+        if [ $FORCE != "yes" ]; then 
+            echo "$OUTPUT_DIR/${tag_base}_sample.fa.gz already exists , skipping"
+            return
+        fi
+    fi
+
+    tag_count=`$GBS_BIN/cat_tag_count.sh -O count "$tag_count_file"`
     sample_rate=`echo "scale=6; $SAMPLE_SIZE/$tag_count" | bc`
-   
-    tag_base=`basename $tag_count_file`
 
     if [ $DRY_RUN == "yes" ]; then
         echo " will execute: 
         fifo=`mktemp --tmpdir=$fifo_dir`
         rm -f $fifo
         mkfifo $fifo
-        $GBS_BIN/cat_tag_count.sh -O fasta $tag_count_file > $fifo &
+        $GBS_BIN/cat_tag_count.sh -O fasta "$tag_count_file" > $fifo &
         tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
         rm -f $fifo
    (** dry run **)
@@ -108,7 +131,7 @@ set -x
         fifo=`mktemp --tmpdir=$fifo_dir`
         rm -f $fifo
         mkfifo $fifo
-        $GBS_BIN/cat_tag_count.sh -O fasta $tag_count_file > $fifo &
+        $GBS_BIN/cat_tag_count.sh -O fasta "$tag_count_file" > $fifo &
         tardis.py -d $OUTPUT_DIR -c 999999999 -w -s $sample_rate cat _condition_fasta_input_$fifo \> _condition_fasta_output_$OUTPUT_DIR/${tag_base}_sample.fa
         rm -f $fifo
     fi
@@ -117,7 +140,15 @@ set +x
 
 function run_blast() {
 set -x
-    tag_base=`basename $tag_count_file`
+    get_canonical_tag_base "$tag_count_file"
+
+    if [ -f $OUTPUT_DIR/${tag_base}.out.gz ]; then
+        if [ $FORCE != "yes" ]; then
+            echo "$OUTPUT_DIR/${tag_base}.out.gz already exists , skipping"
+            return
+        fi
+    fi
+
     sample_file=$OUTPUT_DIR/${tag_base}_sample.fa.gz
     if [ $DRY_RUN == "yes" ]; then
         echo "will execute
@@ -133,7 +164,7 @@ set +x
 
 function wait_for_result() {
 set -x
-    tag_base=`basename $tag_count_file`
+    get_canonical_tag_base "$tag_count_file"
     if [ $DRY_RUN == "yes" ]; then
         echo "will execute
         tardis.py -w -d $OUTPUT_DIR ls _condition_wait_output_$OUTPUT_DIR/${tag_base}.out.gz
