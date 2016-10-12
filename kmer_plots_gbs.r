@@ -338,7 +338,7 @@ draw_distances_plot <- function(datalist, output_folder, distances_plot_image_fi
    # - look for groups and outliers
    fit <- cmdscale(datalist$distance_data,eig=TRUE, k=2)
    jpeg(filename = distances_plot_image_file, 800,800)
-   plot(fit$points, cex=0.7)
+   smoothScatter(fit$points, cex=0.7)
 
    # now work out which ones to label - its a union of all of the "comparison_columns", and 
    # every "n'th" column , as determined by (number of columns / number_of_column_labels)

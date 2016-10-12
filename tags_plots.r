@@ -19,7 +19,7 @@ draw_plots <- function(reads_tags, tag_data, point_labels, number_of_recent_samp
    if(reads_tags == "tags" ) {
       jpeg(filename = "tags_summary.jpg", 1600,1600)
       par(mfrow=c(2,2))
-      plot(tag_data$mean_tag_count,tag_data$std_tag_count, main="Tag counts by sample:mean,stddev", xlab="Mean", ylab="Standard Deviation", cex=2.0, cex.lab=1.9, cex.main=1.9)  
+      smoothScatter(tag_data$mean_tag_count,tag_data$std_tag_count, main="Tag counts by sample:mean,stddev", xlab="Mean", ylab="Standard Deviation", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_tag_count,tag_data$std_tag_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
 
       xmin <- par("usr")[1]
@@ -37,16 +37,16 @@ draw_plots <- function(reads_tags, tag_data, point_labels, number_of_recent_samp
          text( xmin + delta_x , ymax - delta_y * (1+offset_from_last), annotation, cex=1.5 , adj = c( 0, 1 ))
       }
 
-      plot(tag_data$mean_tag_count,tag_data$max_tag_count, main="Tag counts by sample:mean,max", xlab="Mean", ylab="Max", cex=2.0, cex.lab=1.9, cex.main=1.9)  
+      smoothScatter(tag_data$mean_tag_count,tag_data$max_tag_count, main="Tag counts by sample:mean,max", xlab="Mean", ylab="Max", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_tag_count,tag_data$max_tag_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
 
-      plot(tag_data$mean_tag_count,tag_data$min_tag_count, main="Tag counts by sample:mean,min", xlab="Mean", ylab="Min", cex=2.0, cex.lab=1.9, cex.main=1.9)  
+      smoothScatter(tag_data$mean_tag_count,tag_data$min_tag_count, main="Tag counts by sample:mean,min", xlab="Mean", ylab="Min", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_tag_count,tag_data$min_tag_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
    }
    else if(reads_tags == "reads") {
       jpeg(filename = "read_summary.jpg", 1600,1600)
       par(mfrow=c(2,2))
-      plot(tag_data$mean_read_count,tag_data$std_read_count, main="Read counts by sample:mean,stddev", xlab="Mean", ylab="Standard Deviation", cex=2.0, cex.lab=1.9, cex.main=1.9)  
+      smoothScatter(tag_data$mean_read_count,tag_data$std_read_count, main="Read counts by sample:mean,stddev", xlab="Mean", ylab="Standard Deviation", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_read_count,tag_data$std_read_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
 
       xmin <- par("usr")[1]
@@ -64,10 +64,10 @@ draw_plots <- function(reads_tags, tag_data, point_labels, number_of_recent_samp
          text( xmin + delta_x , ymax - delta_y * (1+offset_from_last), annotation, cex=1.5 , adj = c( 0, 1 ))
       }
 
-      plot(tag_data$mean_read_count,tag_data$max_read_count, main="Read counts by sample:mean,max", xlab="Mean", ylab="Max", cex=2.0, cex.lab=1.9, cex.main=1.9)  
+      smoothScatter(tag_data$mean_read_count,tag_data$max_read_count, main="Read counts by sample:mean,max", xlab="Mean", ylab="Max", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_read_count,tag_data$max_read_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
 
-      plot(tag_data$mean_read_count,tag_data$min_read_count, main="Read counts by sample:mean,min", xlab="Mean", ylab="Min", cex=2.0, cex.lab=1.9, cex.main=1.9)  
+      smoothScatter(tag_data$mean_read_count,tag_data$min_read_count, main="Read counts by sample:mean,min", xlab="Mean", ylab="Min", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_read_count,tag_data$min_read_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
    }
    else {
