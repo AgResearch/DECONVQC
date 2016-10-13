@@ -99,18 +99,29 @@ tmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_fifos`
 fifo=`mktemp --tmpdir=$tmpdir`
 rm -f $fifo
 mkfifo $fifo
+if [ ! -p $fifo ]; then
+   echo "cat_tag_count.sh, error creating fifo $fifo"
+   exit 1
+fi
+
+
 
 # set up a file for the stdout / stderr of this run
 OUT_PREFIX=`mktemp -u`
 OUT_PREFIX=`basename $OUT_PREFIX`
 OUT_PREFIX=/tmp/$OUT_PREFIX
 errfile=`mktemp --tmpdir=/tmp XXXXXXXXXXXXXX.cat_tag_count_stderr`
+if [ ! -f $errfile ]; then
+   echo "cat_tag_count.sh, error creating log file $errfile"
+   exit 1
+fi
 
 
 #load tassel3
 module load tassel/3
 
 #start tassel process to write text to fifo, running in background
+echo "running nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i \"$infile\" -o $fifo -t TagCounts -endPlugin -runfork1" >$errfile 2>&1
 nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i "$infile" -o $fifo -t TagCounts -endPlugin -runfork1 >$errfile 2>&1 &
 
 #start process to read fifo and list to stdout
