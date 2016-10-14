@@ -7,6 +7,7 @@ help_text="
  examples : \n
  ./gbs_hiseq1.0.sh -i -n -r 150925_D00390_0235_BC6K0YANXX\n
  ./gbs_hiseq1.0.sh -i -n -t db_update -r 151124_D00390_0240_AC88WPANXX\n
+ ./gbs_hiseq1.0.sh -i -r 161005_D00390_0268_AC9NRJANXX -s SQ2592\n
 "
 
 DRY_RUN=no
