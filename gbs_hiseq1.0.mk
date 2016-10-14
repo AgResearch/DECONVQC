@@ -156,8 +156,8 @@ versions.log:
 
 %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg:  %.sample_in_progress/uneak_in_progress/KGD
 	mkdir -p $(dir $@)
-	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $</../tagCounts/ -O $(dir $@)
-	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $(dir $@)
+	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $</../tagCounts/ -O $(dir $@) 1>$(dir $@)/blast.stdout 2>$(dir $@)/blast.stderr
+	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $(dir $@) 1>$(dir $@)/summary.stdout 2>$(dir $@)/summary.stderr
 	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla $(GBS_BIN)/blast_summary_heatmap.r datafolder=$(dir $@)
 
 %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg:  %.sample_in_progress/uneak_in_progress/KGD
