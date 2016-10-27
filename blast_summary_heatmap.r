@@ -64,7 +64,9 @@ draw_heatmap <- function() {
 
 
    # draw the heatmap in the usual way
-   cm<-brewer.pal(11,"Spectral") # a diverging palette
+   #cm<-brewer.pal(11,"Spectral") # a diverging palette
+   cm<-brewer.pal(9,"OrRd") # a sequential palette 
+   cm <- rev(cm)
 
 
    # set up a vector which will index the labels that are to be blanked out so that 
@@ -86,8 +88,8 @@ draw_heatmap <- function() {
    #hm<-heatmap.2(as.matrix(datamatrix),  scale = "none", 
        dendrogram = "col",  
        trace="none",
-       #trace = "none", breaks =  -2 + 4/11*seq(0,11), 
-       col = cm , key=TRUE, density.info="none", 
+       #trace = "none", breaks =  -2 + 4/9*seq(0,11), 
+       col = cm , key=FALSE, density.info="none", 
        #keysize=1.0, margin=c(17,25), cexRow=1.5, cexCol=1.6, 
        keysize=1.0, margin=c(17,28), cexRow=1.5, cexCol=1.6, 
        lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .6, 0 ), lhei=c(.5, 3))
@@ -106,8 +108,8 @@ draw_heatmap <- function() {
    hm<-heatmap.2(as.matrix(clustered_data),  scale = "none", 
        dendrogram = "col",  
        trace="none",
-       #trace = "none", breaks =  -2 + 4/11*seq(0,11), 
-       col = cm , key=TRUE, density.info="none", 
+       #trace = "none", breaks =  -2 + 4/9*seq(0,11), 
+       col = cm , key=FALSE, density.info="none", 
        #keysize=1.0, margin=c(17,25), cexRow=1.5, cexCol=1.6, 
        keysize=1.0, margin=c(27,28), cexRow=3.0, cexCol=1.2, 
        lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .6, 0 ), lhei=c(.25, 3),labCol=colLabels)

@@ -232,7 +232,7 @@ draw_entropy_heatmap <- function(datamatrix, output_folder, heatmap_image_file, 
    hm_internal<-heatmap.2(as.matrix(datamatrix),  scale = "none", dendrogram = "col",
     Colv = TRUE,  
      trace = "none", breaks = 0 + 15/9*seq(0,9),
-     col = cm , key=TRUE, density.info="none", 
+     col = cm , key=FALSE, density.info="none", 
      keysize=1.0, margin=c(11,20), cexRow=1.5, cexCol=1.5, 
      lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.7, 1.7, .6 ), lhei=c(.5, 3) , labRow = rowLabels)
 
@@ -259,7 +259,7 @@ draw_entropy_heatmap <- function(datamatrix, output_folder, heatmap_image_file, 
    hm<-heatmap.2(as.matrix(datamatrix),  scale = "none", dendrogram = "col",
        Colv = TRUE,  
        trace = "none", breaks = min(datamatrix) + (max(datamatrix)-min(datamatrix))/9*seq(0,9), 
-       col = cm , key=TRUE, density.info="none", 
+       col = cm , key=FALSE, density.info="none", 
        keysize=1.0, margin=c(40,60), cexRow=1.3, cexCol=1.3, 
        lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .8, 0 ), lhei=c(.5, 3) , labRow = rowLabels, labCol=colLabels)
    dev.off()
@@ -311,7 +311,7 @@ draw_comparison_plot <- function(datalist, output_folder, comparison_plot_image_
 
    jpeg(filename = comparison_plot_image_file, 800,800)
    if (length(comparison_columns) < 30 ) {
-      plot(log_rank_subset, entropy_subset, pch='.')
+      plot(log_rank_subset, entropy_subset, pch='.', xlim=c(0,12), ylim=c(8,14))
 
       xmin <- par("usr")[1]
       xmax <- par("usr")[2]
@@ -325,7 +325,7 @@ draw_comparison_plot <- function(datalist, output_folder, comparison_plot_image_
       }
    }
    else {
-      plot(log_rank_subset, entropy_subset, pch='.')
+      plot(log_rank_subset, entropy_subset, pch='.', xlim=c(0,12), ylim=c(8,14))
       title(main=paste( colnames(datalist$entropy_data)[1] , "....etc"))
    }
    dev.off()
