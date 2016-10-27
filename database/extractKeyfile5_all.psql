@@ -1,0 +1,31 @@
+/*
+* this script extracts a keyfile   
+*/
+\a
+\f '\t'
+\pset footer off
+select 
+   Flowcell,
+   Lane,
+   Barcode,
+   Sample,
+   PlateName,
+   PlateRow as Row,
+   PlateColumn as Column,
+   LibraryPrepID,
+   Counter,
+   Comment,
+   Enzyme,
+   Species,
+   NumberOfBarcodes,
+   Bifo,
+   Fastq_link,
+   Sample||':'||LibraryPrepID as FullSampleName,
+   subjectname
+from 
+   biosampleob s join gbsKeyFileFact g on 
+   g.biosampleob = s.obid
+where 
+   s.samplename = :keyfilename
+order by 
+   factid;
