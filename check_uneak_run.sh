@@ -11,7 +11,7 @@ check_moniker=$2
 if [ $check_moniker == "global" ]; then
    error_files=`find $dirname -name "*.se" -size +0c -ls`
 
-   if [ -z $error_files ]; then
+   if [ -z "$error_files" ]; then
       exit 0
    else
       echo "**** There were errors reported by one or more tassel steps - see below ****"

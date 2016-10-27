@@ -210,7 +210,7 @@ versions.log:
 ##############################################
 # specify the intermediate files to keep 
 ##############################################
-.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.sample_in_progress/uneak_in_progress/kmer_analysis %.sample_in_progress/uneak_in_progress/blast_analysis %.sample_in_progress/uneak_in_progress/KGD %.sample_in_progress/uneak_in_progress/hapMap %.sample_in_progress/uneak_in_progress/mapInfo %.sample_in_progress/uneak_in_progress/tagsByTaxa %.sample_in_progress/uneak_in_progress/tagPair %.sample_in_progress/uneak_in_progress/mergedTagCounts %.sample_in_progress/uneak_in_progress/tagCounts %.sample_in_progress/uneak_in_progress/Illumina %.sample_in_progress/uneak_in_progress/key
+.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.sample_in_progress/uneak_in_progress/kmer_analysis %.sample_in_progress/uneak_in_progress/blast_analysis %.sample_in_progress/uneak_in_progress/KGD %.sample_in_progress/uneak_in_progress/hapMap %.sample_in_progress/uneak_in_progress/mapInfo %.sample_in_progress/uneak_in_progress/tagsByTaxa %.sample_in_progress/uneak_in_progress/tagPair %.sample_in_progress/uneak_in_progress/mergedTagCounts %.sample_in_progress/uneak_in_progress/tagCounts %.sample_in_progress/uneak_in_progress/Illumina %.sample_in_progress/uneak_in_progress/key %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
 
 ##############################################
 # cleaning - not yet doing this using make  
