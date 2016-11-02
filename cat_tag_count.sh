@@ -16,12 +16,12 @@ help_text="
  (stdout / stderr of the process itself is written to /tmp/*.cat_tag_count_stderr)
  
  examples : \n
- # just list the raw text tag file
- ./cat_tag_count.sh /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
- # produce a redundant fasta listing of tags (i.e. each is listed as a sequence N times, N its tag count)
- ./cat_tag_count.sh -O fasta /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
- # print out the total count of all tags 
- ./cat_tag_count.sh -O count /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
+ # just list the raw text tag file \n
+ cat_tag_count.sh /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
+ # produce a redundant fasta listing of tags (i.e. each is listed as a sequence N times, N its tag count) \n
+ cat_tag_count.sh -O fasta /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
+ # print out the total count of all tags \n
+ cat_tag_count.sh -O count /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
 "
 
 FORMAT="text"
@@ -92,27 +92,47 @@ get_opts $@
 check_opts
 
 
-# now cat the file 
-
-# set up a fifo to pass to tassel as its outfile
-tmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_fifos`
-fifo=`mktemp --tmpdir=$tmpdir`
-rm -f $fifo
-mkfifo $fifo
-if [ ! -p $fifo ]; then
-   echo "cat_tag_count.sh, error creating fifo $fifo"
-   exit 1
-fi
-
-
-
 # set up a file for the stdout / stderr of this run
 OUT_PREFIX=`mktemp -u`
 OUT_PREFIX=`basename $OUT_PREFIX`
 OUT_PREFIX=/tmp/$OUT_PREFIX
 errfile=`mktemp --tmpdir=/tmp XXXXXXXXXXXXXX.cat_tag_count_stderr`
-if [ ! -f $errfile ]; then
+if [[ ( $? != 0 ) || ( -z "$errfile" ) || ( ! -f "$errfile" ) ]]; then
    echo "cat_tag_count.sh, error creating log file $errfile"
+   exit 1
+fi
+
+
+# set up a fifo to pass to tassel as its outfile. sleeps inserted
+# as we seem to get occassional fails and that could be due to 
+# race condition
+tmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_fifos`
+sleep 1
+fifo=`mktemp --tmpdir=$tmpdir`
+sleep 1
+# sometimes this appears to fail , returning nothing. Try to pick this 
+# up and try again 
+if [[ ( -z "$fifo" ) || ( ! -f "$fifo" ) ]]; then
+   echo "mktemp returned empty string or failed - trying again after short wait" >>$errfile 2>&1
+   sleep 1
+
+   if [[ ( -z "$tmpdir" ) || ( ! -d "$tmpdir" ) ]]; then
+      tmpdir=`mktemp --tmpdir=/tmp -d XXXXXXXXXXXXXX.cat_tag_count_fifos`
+      sleep 1
+   fi
+   fifo=`mktemp --tmpdir=$tmpdir`
+   sleep 1
+
+   if [[ ( -z "$fifo" ) || ( ! -f "$fifo" ) ]]; then
+      echo "mktemp failed on second attempt - giving up and bailing out" >>$errfile 2>&1
+      exit 1
+   fi
+fi
+rm -f $fifo
+mkfifo $fifo
+sleep 1
+if [ ! -p $fifo ]; then
+   echo "cat_tag_count.sh, error creating fifo $fifo" >>$errfile 2>&1
    exit 1
 fi
 
@@ -121,8 +141,8 @@ fi
 module load tassel/3
 
 #start tassel process to write text to fifo, running in background
-echo "running nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i \"$infile\" -o $fifo -t TagCounts -endPlugin -runfork1" >$errfile 2>&1
-nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i "$infile" -o $fifo -t TagCounts -endPlugin -runfork1 >$errfile 2>&1 &
+echo "running nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i \"$infile\" -o $fifo -t TagCounts -endPlugin -runfork1" >>$errfile 2>&1
+nohup run_pipeline.pl -fork1 -BinaryToTextPlugin  -i "$infile" -o $fifo -t TagCounts -endPlugin -runfork1 >>$errfile 2>&1 &
 
 #start process to read fifo and list to stdout
 if [ $FORMAT == "text" ]; then
