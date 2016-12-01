@@ -2,13 +2,13 @@
 
 if [ -z "$3" ]; then
    echo "usage :
-      ./run_sample_contamination_checks.sh run_name machine tardis_chunksize  sample_rate 
+      ./run_sample_contamination_checks.sh run working_folder tardis_chunksize  sample_rate 
       or
-      ./run_sample_contamination_checks.sh run_name machine tardis_chunksize  sample_rate blast-only # if sampling and trimming already done and just want to run blast
+      ./run_sample_contamination_checks.sh run working_folder tardis_chunksize  sample_rate blast-only # if sampling and trimming already done and just want to run blast
       or 
-      ./run_sample_contamination_checks.sh run_name machine tardis_chunksize  sample_rate trim-only # if just want to sample and trim
+      ./run_sample_contamination_checks.sh run working_folder tardis_chunksize  sample_rate trim-only # if just want to sample and trim
       e.g.
-      ./run_sample_contamination_checks.sh 150326_D00390_0220_BC6GKKANXX hiseq 400000 .00005
+      ./run_sample_contamination_checks.sh 161118_D00390_0273_BC9NB4ANXX /dataset/hiseq/scratch/postprocessing/161118_D00390_0273_BC9NB4ANXX.processed/taxonomy_analysis 400000 .00005
       "
    exit 1
 fi
@@ -18,35 +18,37 @@ fi
 #
 
 RUN=$1
-MACHINE=$2
+WORKING_FOLDER=$2
 TARDIS_chunksize=$3
 SAMPLE_RATE=$4
 SELECT=$5
-BIN=/dataset/hiseq/active/bin/hiseq_pipeline
 
-HISEQ_ROOT=/dataset/${MACHINE}/active
-BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
-RUN_ROOT=${BUILD_ROOT}/${RUN}.processed_in_progress
-BCL2FASTQ_FOLDER=${RUN_ROOT}/bcl2fastq/
-WORKING_FOLDER=${RUN_ROOT}/taxonomy_analysis_in_progress
-PARAMETERS_FILE=$BUILD_ROOT/${RUN}.SampleProcessing.json
+BCL2FASTQ_FOLDER=${WORKING_FOLDER}/../bcl2fastq/
+PARAMETERS_FILE=${WORKING_FOLDER}/../../${RUN}.SampleProcessing.json
 
 
-# sanity checks
-if [ ! -d ${BCL2FASTQ_FOLDER} ]; then
-   echo "error ${BCL2FASTQ_FOLDER} is missing"
-   exit 1
-fi
 if [ ! -d ${WORKING_FOLDER} ]; then
    echo "error ${WORKING_FOLDER} is missing"
    exit 1
 fi
 
-cd $BIN
+cd $GBS_BIN
 if [ ! -f .tardishrc ]; then 
-   echo "error - tardis config file .tardishrc is missing. (Needed to configure
-   workdir_is_rootdir=True)"
-   exit 1
+   echo "
+[tardish]
+Rport=5555
+Rhost=localhost
+
+
+[tardis_engine]
+workdir_is_rootdir=True
+shell_template_name=condor_shell
+# this is somewhat low because typiclly make will launch
+# several tardis instances, and each process may itself
+# multithread (e.g. blastn)
+max_processes=5
+hpctype=condor
+" > .tardishrc
 fi
 
 if [ ! -f $PARAMETERS_FILE ]; then
@@ -56,10 +58,10 @@ fi
 
 
 # get blast and trimming parameters
-blast_database=`$BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_database`
-blast_alignment_parameters=`$BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_alignment_parameters`
-blast_task=`$BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_task`
-adapter_to_cut=`$BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name adapter_to_cut`
+blast_database=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_database`
+blast_alignment_parameters=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_alignment_parameters`
+blast_task=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_task`
+adapter_to_cut=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name adapter_to_cut`
 
 
 if [ "$SELECT" != "blast-only" ]; then 
@@ -143,12 +145,12 @@ if [ "$SELECT" != "trim-only" ]; then
          sleep 180 
       done
       rm $batonfile
-      $BIN/summarise_hiseq_taxonomy.py  ${WORKING_FOLDER}/${sample}.blastresults.txt.gz 
+      $GBS_BIN/summarise_hiseq_taxonomy.py  ${WORKING_FOLDER}/${sample}.blastresults.txt.gz 
    done
 
 
    # create a table from all summaries - one sample per column, one row per taxon
-   $BIN/summarise_hiseq_taxonomy.py --summary_type summary_table $WORKING_FOLDER/*.pickle > ${WORKING_FOLDER}/samples_taxonomy_table.txt
+   $GBS_BIN/summarise_hiseq_taxonomy.py --summary_type summary_table $WORKING_FOLDER/*.pickle > ${WORKING_FOLDER}/samples_taxonomy_table.txt
 
    # write nt database version info
    blastdbcmd -db $blast_database -info > ${WORKING_FOLDER}/blast_db_info.txt 

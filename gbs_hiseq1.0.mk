@@ -150,11 +150,18 @@ versions.log:
 	./check_uneak_run.sh $< global
 	mv $< $@
 
-%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg   %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg
+# (uneak_in_progress no longer depends on blast analysis as blast analysis 
+# is slow , so we will usually do that later - to include blast analysis as a dependency ,
+# the dependency list woudl be : 
+# uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg   %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg
+%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
 	# check it looks ok
 	echo "checking $@"
 
-%.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg:  %.sample_in_progress/uneak_in_progress/KGD
+
+# The two targets here support running the blast analysis either synchronously as part of the main
+# build (the second target - good but the delays the final build), or later on (the first target)
+%.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg:  %.sample_in_progress/uneak_in_progress/KGD
 	mkdir -p $(dir $@)
 	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $</../tagCounts/ -O $(dir $@) 1>$(dir $@)/blast.stdout 2>$(dir $@)/blast.stderr
 	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $(dir $@) 1>$(dir $@)/summary.stdout 2>$(dir $@)/summary.stderr

@@ -21,6 +21,7 @@
 # initialise project specific variables - these are usually overridden by command-line settings as above
 # ******************************************************************************************
 mytmp=/tmp
+run=
 #
 # ******************************************************************************************
 # other variables (not project specific)
@@ -28,8 +29,8 @@ mytmp=/tmp
 RUN_TARDIS=tardis.py
 RUN_FASTQC=fastqc
 RUN_BCL2FASTQ=/usr/lib64/bcl2fastq-1.8.4/bin/configureBclToFastq.pl
-RUN_CONTAMINATION_CHECK=/dataset/hiseq/active/bin/hiseq_pipeline/run_sample_contamination_checks.sh
-RUN_MAPPING_PREVIEW=/dataset/hiseq/active/bin/hiseq_pipeline/run_mapping_preview.sh
+RUN_CONTAMINATION_CHECK=$(GBS_BIN)/run_sample_contamination_checks.sh
+RUN_MAPPING_PREVIEW=$(GBS_BIN)/run_mapping_preview.sh
 
 # variables for tardis and other apps
 machine=hiseq
@@ -157,11 +158,13 @@ versions.log:
 	# check it all looks right and then
 	mv $< $@
 
+# the second pattern is used for running this later on
 %.processed_in_progress/taxonomy_analysis_in_progress: %.processed_in_progress/bcl2fastq 
+%.processed/taxonomy_analysis: %.processed/bcl2fastq 
 	echo making $@
 	if [ ! -d $@ ]; then mkdir $@ ; fi
 	#$(RUN_CONTAMINATION_CHECK) $(notdir $(*F)) $(TARDIS_chunksize) $(SAMPLE_RATE) 
-	$(RUN_CONTAMINATION_CHECK) $(notdir $(*F)) $(machine) $($(machine)) 
+	$(RUN_CONTAMINATION_CHECK) $(run) $@ $($(machine)) 
 
 %.processed_in_progress/fastqc_analysis: %.processed_in_progress/fastqc_analysis_in_progress
 	# check it all looks right and then

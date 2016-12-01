@@ -118,7 +118,7 @@ function get_parameters() {
        if [ "$answer" != "y" ]; then
           echo "OK will not update"
        else
-          $GBS_BIN/get_processing_parameters.py --parameter_file ${HISEQ_ROOT}/${RUN}/SampleSheet.csv --species_references_file  /dataset/hiseq/active/sample-sheets/reference_genomes.csv   > $PARAMETERS_FILE
+          $GBS_BIN/get_processing_parameters.py --json_out_file $PARAMETERS_FILE --parameter_file ${HISEQ_ROOT}/${RUN}/SampleSheet.csv --species_references_file  /dataset/hiseq/active/sample-sheets/reference_genomes.csv 
        fi
 
 

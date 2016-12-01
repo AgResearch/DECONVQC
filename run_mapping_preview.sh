@@ -13,7 +13,6 @@ module load samtools
 
 RUN=$1
 MACHINE=$2
-BIN=/dataset/hiseq/active/bin/hiseq_pipeline
 HPC_RESOURCE=local
 
 HISEQ_ROOT=/dataset/${MACHINE}/active
@@ -41,7 +40,7 @@ if [ ! -d ${WORKING_FOLDER} ]; then
    exit 1
 fi
 
-cd $BIN
+cd $GBS_BIN
 if [ ! -f .tardishrc ]; then 
    echo "error - tardis config file .tardishrc is missing. "
    exit 1
@@ -57,8 +56,8 @@ for sample_trimmed_file in $TAX_FOLDER/*.fastq.trimmed.gz; do
    if [ ! -d $WORKING_FOLDER/$sample_name ]; then
        mkdir $WORKING_FOLDER/$sample_name 
    fi
-   REF_GENOME=`$BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
-   alignment_parameters=`$BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_parameters`
+   REF_GENOME=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
+   alignment_parameters=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_parameters`
    sample_trimmed_moniker=${sample_name}.sample.fastq.trimmed
    if [ ! -z $REF_GENOME ]; then
       if [ ! -f ${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then 
@@ -76,7 +75,7 @@ for sample_trimmed_file in $TAX_FOLDER/*.fastq.trimmed.gz; do
    sample_name=`basename $sample_trimmed_file .list.sample.fastq.trimmed.gz`
    batonfile=${WORKING_FOLDER}/${sample_name}.bwa.baton
    sample_trimmed_moniker=${sample_name}.sample.fastq.trimmed
-   REF_GENOME=`$BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
+   REF_GENOME=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
    if [ ! -z $REF_GENOME ]; then
       REF_GENOME_MONIKER=`basename $REF_GENOME`
       echo "waiting for $batonfile"

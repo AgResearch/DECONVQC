@@ -21,8 +21,7 @@ def get_csv_dict(filename, key_column_name, value_column_name, min_field_count =
             raise Exception("error - %s not found in %s"%(value_column_name.upper() , filename))
         key_index = headings.index(key_column_name.upper())
         value_index = headings.index(value_column_name.upper())
-        return dict([(record[key_index], record[value_index]) for record in csvreader if len(record) > min_field_count]) 
-
+        return dict([(record[key_index], record[value_index]) for record in csvreader if len(record) > min_field_count])
 
 def get_value(options):
     all_dict = get_parameter_dict(options["parameter_file"])
@@ -43,26 +42,44 @@ def get_value(options):
     return value 
 
 
-def get_enzyme(run_name, library_name):
+def get_enzyme(library_name, run_name):
     """
     database queries are wrapped in scripting mainly for authentication reasons (credentials can be suppied in .pgpass) - 
     also makes the query accessible from shell scripts
     """
-    # first check only one enzyme is specified. If more than one then "its complicated" - will need to split
-    # keyfile etc. This code is called in the context of a simple GBS based Q/C which doesn't support that scenario
-    enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_count_from_database.sh"), library_name, run_name]
+    #print "DEBUG run=%s lib=%s"%(run_name, library_name)
+    # first check only one enzyme is specified.
+    flowcell=None
+    enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_count_from_database.sh"), run_name, library_name]
     #print "DEBUG running %s"%str(enzyme_query)
     proc = subprocess.Popen(enzyme_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
         raise Exception("Unable to get enzyme count from %s - call returned an error"%str(enzyme_query))    
     if stdout.strip() not in ["0","1"]:
-        raise Exception("Error - found %s enzymes for library %s, run %s  - this is currently unsupported in this context (needed 1)"%(stdout.strip(), library_name, run_name))
+        print "Warning - found %s enzymes for library %s, run %s  - note for example cannot extract and process a single keyfile for this entire library"%(stdout.strip(), library_name, run_name)
+        print "Attempting to get a single enzyme for this flowcell"
+        # parse the run to obtain flowcell id - e.g. from 161118_D00390_0273_BC9NB4ANXX obtain C9NB4ANXX
+        run_tokens = re.split("_", run_name)
+        if len(run_tokens) != 4:
+            raise Exception("Unable to parse flowcell id from %s"%run_name)
+        flowcell = run_tokens[3][1:]
+        enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_count_from_database.sh"), run_name, library_name, flowcell]
+        proc = subprocess.Popen(enzyme_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout, stderr) = proc.communicate()
+        if proc.returncode != 0:
+            raise Exception("Unable to get enzyme count from %s - call returned an error"%str(enzyme_query))
+        if stdout.strip() not in ["0","1"]:
+            raise Exception("Error - found %s enzymes for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
     if stdout.strip() == "0":
         return "undefined"
 
     # got this far - so get the enzyme
-    enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_from_database.sh"), library_name, run_name]
+    if flowcell is None:
+        enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_from_database.sh"), run_name, library_name]
+    else:
+        enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_from_database.sh"), run_name, library_name, flowcell]
+        
     #print "DEBUG running %s"%str(enzyme_query)
     proc = subprocess.Popen(enzyme_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
@@ -111,6 +128,7 @@ def get_json(options):
    
         if len(sample.strip()) > 2:
             alignment_references[sample]  = best_reference
+            #print "debug2 sample=%s run=%s"%(sample, run_name)
             enzymes[sample] = get_enzyme(sample, run_name)
 
     json_dict = {
@@ -135,7 +153,7 @@ def get_options():
     long_description = """
 
 example : ./get_processing_parameters.py --parameter_file /dataset/hiseq/active/141217_D00390_0214_BC4UEHACXX/SampleProcessing.json --parameter_name alignment_reference  --sample SQ0018
-example : ./get_processing_parameters.py --parameter_file /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleSheet.csv --species_references_file  /dataset/hiseq/active/sample-sheets/reference_genomes.csv  > /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleProcessing.json
+example : ./get_processing_parameters.py --json_out_file /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleProcessing.json --parameter_file /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleSheet.csv --species_references_file  /dataset/hiseq/active/sample-sheets/reference_genomes.csv  
 
 """
 
@@ -145,6 +163,7 @@ example : ./get_processing_parameters.py --parameter_file /dataset/hiseq/active/
                    choices=["bwa_alignment_reference","blast_database","blast_alignment_parameters","blast_task","bwa_alignment_parameters","adapter_to_cut","enzymes"],help="name of parameter")
     parser.add_argument('--sample', dest='sample', default=None, help="sample name")
     parser.add_argument('--species_references_file', dest='species_references_file', default=None, help="a CSV file mapping species to indexed references")
+    parser.add_argument('--json_out_file', dest='json_out_file', default=None, help="name of json output file")
 
 
     args = vars(parser.parse_args())
@@ -157,7 +176,12 @@ def main():
     if options['parameter_name'] is not None:
         print get_value(options)
     else:
-	print get_json(options)
+        if options['json_out_file'] is None:
+            print get_json(options)
+        else:
+            with open(options['json_out_file'],"w") as json_out:
+                print >> json_out, get_json(options)
+        
                                 
 if __name__ == "__main__":
     main()

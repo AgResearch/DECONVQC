@@ -17,10 +17,15 @@ peacock of %(run_name)s
 </title>
 </head>
 <body>
+<h2> Contents </h2>
+<ul>
+<li> <a href="#plots"> Plots </a>
+<li> <a href="#spreadsheets"> Spreadsheet Summaries </a>
+</ul>
 """
 
 header2="""
-<table width=90%% align=center>
+<table id=plots width=90%% align=center>
 <tr>
 <td>
 <font size="-1"> plot file name</font>

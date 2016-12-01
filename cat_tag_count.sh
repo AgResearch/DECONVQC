@@ -20,16 +20,22 @@ help_text="
  cat_tag_count.sh /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
  # produce a redundant fasta listing of tags (i.e. each is listed as a sequence N times, N its tag count) \n
  cat_tag_count.sh -O fasta /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
+ # produce a non-redundant fasta listing of tags (i.e. each is listed as a sequence once) \n
+ cat_tag_count.sh -u -O fasta /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
  # print out the total count of all tags \n
  cat_tag_count.sh -O count /dataset/hiseq/scratch/postprocessing/151016_D00390_0236_AC6JURANXX.gbs/SQ0124.processed_sample/uneak/tagCounts/G88687_C6JURANXX_1_124_X4.cnt \n
 "
 
 FORMAT="text"
-while getopts ":hO:" opt; do
+unique=no
+while getopts ":huO:" opt; do
   case $opt in
     h)
       echo -e $help_text
       exit 0
+      ;;
+    u)
+      unique=yes
       ;;
     O)
       FORMAT=$OPTARG
@@ -150,7 +156,11 @@ if [ $FORMAT == "text" ]; then
 elif [ $FORMAT == "count" ]; then
    awk '{ if(NF == 3) {sum += $3} } END { print sum }' $fifo
 elif [ $FORMAT == "fasta" ]; then
-   cat <$fifo | $GBS_BIN/tags_to_fasta.py
+   if [ $unique == "no" ]; then
+      cat <$fifo | $GBS_BIN/tags_to_fasta.py
+   else
+      cat <$fifo | $GBS_BIN/tags_to_fasta.py -u
+   fi
 fi
 
 # clean up

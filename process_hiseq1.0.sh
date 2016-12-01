@@ -134,7 +134,6 @@ load_modules
 # from here , in line code to do the processing
 RUN_ROOT=${BUILD_ROOT}/${RUN}.processed_in_progress
 BCL2FASTQ_FOLDER=${RUN_ROOT}/bcl2fastq
-TAXONOMY_ANALYSIS_FOLDER=${RUN_ROOT}/taxonomy_analysis_in_progress
 PARAMETERS_FILE=$BUILD_ROOT/${RUN}.SampleProcessing.json
 
 if [ $RUN == "all"  ]; then 
@@ -182,7 +181,6 @@ for completed_run_landmark in $completed_run_landmarks; do
 
 
    RUN_ROOT=${BUILD_ROOT}/${run}.processed_in_progress
-   TAXONOMY_ANALYSIS_FOLDER=${RUN_ROOT}/taxonomy_analysis_in_progress
    MAPPING_FOLDER=${RUN_ROOT}/mapping_analysis_in_progress
 
    # get the parameters that cnotrol the Q/C run - e.g.
@@ -199,8 +197,7 @@ for completed_run_landmark in $completed_run_landmarks; do
          MAKE_TARGET="processed_in_progress/mapping_preview"
       elif [ $ANALYSIS == "contamination" ]; then
          set -x
-         rm -Ir $TAXONOMY_ANALYSIS_FOLDER
-         MAKE_TARGET="processed_in_progress/taxonomy_analysis"
+         MAKE_TARGET="processed/taxonomy_analysis"
       else
          echo "Invalid analysis name - must be mapping , contamination or all " >&2
          exit 1
@@ -211,10 +208,10 @@ for completed_run_landmark in $completed_run_landmarks; do
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
       set -x
-      make -n -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
+      make -n -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
    else
       set -x
-      make -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
+      make -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
       echo ""
    fi
 
