@@ -25,6 +25,7 @@ SELECT=$5
 
 BCL2FASTQ_FOLDER=${WORKING_FOLDER}/../bcl2fastq/
 PARAMETERS_FILE=${WORKING_FOLDER}/../../${RUN}.SampleProcessing.json
+RUN_ROOT=${WORKING_FOLDER}/..
 
 
 if [ ! -d ${WORKING_FOLDER} ]; then
