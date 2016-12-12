@@ -10,13 +10,22 @@ def get_parameter_dict(filename):
     return parameter_dict
 
 def get_csv_dict(filename, key_column_name, value_column_name, min_field_count = 1):
+    """
+    this method picks out a key-value pair of columns from a CSV file, which may have a header section
+    """
     with open(filename, 'r') as csvfile:
         csvreader = csv.reader(csvfile)
+
+        # read records until we find a record containin the key - thats assumed to be the
+        # section header we are interested in 
         headings = [item.upper() for item in csvreader.next()]
-        #print headings
-        #print key_column_name.upper()
-        if key_column_name.upper() not in headings:
-            raise Exception("error - %s not found in %s"%(key_column_name.upper() , filename))
+
+        while key_column_name.upper() not in headings:
+            try:
+                headings = [item.upper() for item in csvreader.next()]
+            except StopIteration:
+                raise Exception("get_csv_dict: could not find %s in %s"%(key_column_name, filename))
+                        
         if value_column_name.upper() not in headings:
             raise Exception("error - %s not found in %s"%(value_column_name.upper() , filename))
         key_index = headings.index(key_column_name.upper())
@@ -97,8 +106,14 @@ def get_json(options):
     see e.g. /dataset/hiseq/active/141217_D00390_0214_BC4UEHACXX/SampleProcessing.json
     """
     species_references_dict = get_csv_dict(options["species_references_file"],"species","reference genome")
-    sample_sheet_dict = get_csv_dict(options["parameter_file"],"SampleID","Description", 5)
+    try:
+        sample_sheet_dict = get_csv_dict(options["parameter_file"],"SampleID","Description", 5)
+    except:
+        sample_sheet_dict = get_csv_dict(options["parameter_file"],"Sample_ID","Description", 5)
+        
 
+    print "DEBUG"
+    print sample_sheet_dict
 
     # parse the run name from the parameter file - e.g. 
     # from /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleSheet.csv, get 150506_D00390_0225_BC6K2RANXX

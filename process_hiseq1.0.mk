@@ -28,7 +28,7 @@ run=
 # ******************************************************************************************
 RUN_TARDIS=tardis.py
 RUN_FASTQC=fastqc
-RUN_BCL2FASTQ=/usr/lib64/bcl2fastq-1.8.4/bin/configureBclToFastq.pl
+RUN_BCL2FASTQ=/usr/local/bin/bcl2fastq 
 RUN_CONTAMINATION_CHECK=$(GBS_BIN)/run_sample_contamination_checks.sh
 RUN_MAPPING_PREVIEW=$(GBS_BIN)/run_mapping_preview.sh
 
@@ -182,8 +182,7 @@ versions.log:
 %.processed_in_progress/bcl2fastq_in_progress:
 	if [ ! -d $*.processed_in_progress ]; then mkdir $*.processed_in_progress  ; fi
 	if [ ! -d $@ ]; then mkdir $@ ; fi
-	$(RUN_BCL2FASTQ) --input-dir $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls --force --output-dir $@ --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv --no-eamss --mismatches 0 --adapter-sequence $(adapters_file1) --adapter-sequence $(adapters_file2) --fastq-cluster-count 0 > $*_configureBclToFastq.log 2>&1
-	cd $@ && nohup make -j 24 > $*_bcl2fastq.log 2>&1
+	$(RUN_BCL2FASTQ) -d 8 -p 8 -R $(hiseq_root)/$(*F) --input-dir $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls --output-dir $@ --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv --barcode-mismatches 0 > $*_bcl2fastq.log 2>&1
 
 
 ##############################################

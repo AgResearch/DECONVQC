@@ -67,7 +67,7 @@ if [ -z "$GBS_BIN" ]; then
    exit 1
 fi
 
-if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "mapping" ) && ( $ANALYSIS != "contamination" ) ]]; then
+if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "mapping" ) && ( $ANALYSIS != "contamination" )  && ( $ANALYSIS != "bcl2fastq" ) ]]; then
     echo "Invalid analysis name - must be mapping , contamination or all " >&2
     exit 1
 fi
@@ -197,9 +197,12 @@ for completed_run_landmark in $completed_run_landmarks; do
          MAKE_TARGET="processed_in_progress/mapping_preview"
       elif [ $ANALYSIS == "contamination" ]; then
          set -x
-         MAKE_TARGET="processed/taxonomy_analysis"
+         MAKE_TARGET="processed_in_progress/taxonomy_analysis"
+      elif [ $ANALYSIS == "bcl2fastq" ]; then
+         set -x
+         MAKE_TARGET="processed_in_progress/bcl2fastq"
       else
-         echo "Invalid analysis name - must be mapping , contamination or all " >&2
+         echo "Invalid analysis name - must be mapping , contamination , bcl2fastq or all " >&2
          exit 1
       fi
       set +x

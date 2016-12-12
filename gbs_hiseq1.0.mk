@@ -28,7 +28,6 @@ mytmp=/tmp
 # ******************************************************************************************
 RUN_TARDIS=tardis.py
 RUN_FASTQC=fastqc
-RUN_BCL2FASTQ=/usr/lib64/bcl2fastq-1.8.4/bin/configureBclToFastq.pl
 GET_READS_TAGS_PER_SAMPLE=$(GBS_BIN)/get_reads_tags_per_sample.py
 
 # variables for tardis and other apps
