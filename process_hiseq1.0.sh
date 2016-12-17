@@ -14,6 +14,7 @@ help_text="
  ./process_hiseq1.0.sh -i -n -a mapping -r 150515_D00390_0227_BC6JPMANXX \n
  ./process_hiseq1.0.sh -i -r 150515_D00390_0227_BC6JPMANXX \n
  ./process_hiseq1.0.sh -i -a contamination -r 150515_D00390_0227_BC6JPMANXX \n
+ ./process_hiseq1.0.sh -i -a bcl2fastq -r 150515_D00390_0227_BC6JPMANXX \n
 "
 
 DRY_RUN=no

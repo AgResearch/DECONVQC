@@ -64,7 +64,6 @@ blast_alignment_parameters=`$GBS_BIN/get_processing_parameters.py --parameter_fi
 blast_task=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name blast_task`
 adapter_to_cut=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name adapter_to_cut`
 
-
 if [ "$SELECT" != "blast-only" ]; then 
    # build a listfile containing fastq files, for each sample  
    rm ${RUN_ROOT}/*.list

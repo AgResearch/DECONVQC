@@ -112,8 +112,8 @@ def get_json(options):
         sample_sheet_dict = get_csv_dict(options["parameter_file"],"Sample_ID","Description", 5)
         
 
-    print "DEBUG"
-    print sample_sheet_dict
+    #print "DEBUG"
+    #print sample_sheet_dict
 
     # parse the run name from the parameter file - e.g. 
     # from /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleSheet.csv, get 150506_D00390_0225_BC6K2RANXX

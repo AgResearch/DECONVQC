@@ -160,7 +160,7 @@ versions.log:
 
 # the second pattern is used for running this later on
 %.processed_in_progress/taxonomy_analysis_in_progress: %.processed_in_progress/bcl2fastq 
-%.processed/taxonomy_analysis: %.processed/bcl2fastq 
+#%.processed/taxonomy_analysis: %.processed/bcl2fastq 
 	echo making $@
 	if [ ! -d $@ ]; then mkdir $@ ; fi
 	#$(RUN_CONTAMINATION_CHECK) $(notdir $(*F)) $(TARDIS_chunksize) $(SAMPLE_RATE) 
@@ -182,7 +182,9 @@ versions.log:
 %.processed_in_progress/bcl2fastq_in_progress:
 	if [ ! -d $*.processed_in_progress ]; then mkdir $*.processed_in_progress  ; fi
 	if [ ! -d $@ ]; then mkdir $@ ; fi
-	$(RUN_BCL2FASTQ) -d 8 -p 8 -R $(hiseq_root)/$(*F) --input-dir $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls --output-dir $@ --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv --barcode-mismatches 0 > $*_bcl2fastq.log 2>&1
+	#$(RUN_BCL2FASTQ) -d 8 -p 8 -R $(hiseq_root)/$(*F) --input-dir $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls --output-dir $@ --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv --barcode-mismatches 0 > $*_bcl2fastq.log 2>&1
+	$(RUN_BCL2FASTQ) -d 8 -p 8  --ignore-missing-bcls --ignore-missing-filter --ignore-missing-positions --ignore-missing-controls --auto-set-to-zero-barcode-mismatches --find-adapters-with-sliding-window --adapter-stringency 0.9 --mask-short-adapter-reads 35 --minimum-trimmed-read-length 35 -R $(hiseq_root)/$(*F)  --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv -o $@  -i $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls  > $*_bcl2fastq.log 2>&1
+
 
 
 ##############################################

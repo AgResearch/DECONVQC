@@ -99,7 +99,8 @@ fi
 
 
 #cp $RUN_ROOT/${RUN_NAME}/SampleSheet.csv /tmp/${RUN_NAME}.txt
-awk -F, '{if(NF>5)print}' ${RUN_PATH}/SampleSheet.csv  > /tmp/${RUN_NAME}.txt
+#awk -F, '{if(NF>5)print}' ${RUN_PATH}/SampleSheet.csv  > /tmp/${RUN_NAME}.txt
+cat ${RUN_PATH}/SampleSheet.csv | $GBS_BIN/database/sanitiseSampleSheet.py -r $RUN_NAME > /tmp/${RUN_NAME}.txt
 echo "
 insert into bioSampleList (xreflsid, listName, listComment)
 values(:run_name, :run_name, 'AgResearch Hiseq Run');
@@ -120,7 +121,9 @@ insert into hiseqSampleSheetFact (
    Control ,
    Recipe,
    Operator ,
-   SampleProject )
+   SampleProject ,
+   sampleplate,
+   samplewell)
 select
    obid,
    FCID ,
@@ -132,14 +135,16 @@ select
    Control ,
    Recipe,
    Operator ,
-   SampleProject 
+   SampleProject, 
+   sampleplate,
+   samplewell 
 from 
    bioSampleList as s join samplesheet_temp as t
    on s.listName = :run_name and 
    t. sampleid is not null;
 
 insert into biosampleob(xreflsid, samplename, sampledescription, sampletype)
-select 
+select distinct
    SampleID,
    SampleID,
    max(description),
