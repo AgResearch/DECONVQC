@@ -68,7 +68,7 @@ if [ "$SELECT" != "blast-only" ]; then
    # build a listfile containing fastq files, for each sample  
    rm ${RUN_ROOT}/*.list
    found_file=0
-   for file in `find ${BCL2FASTQ_FOLDER} -name "*.fastq.gz" -print `; do 
+   for file in `find ${BCL2FASTQ_FOLDER}/*/ -name "*.fastq.gz" -print `; do 
       found_file=1
       sample=`dirname $file`
       sample=`basename $sample`
