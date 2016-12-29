@@ -204,7 +204,7 @@ select
 from
    biosampleob as s join keyfile_temp as t on
    s.samplename = :samplename and
-   s.sampletype = 'Illumina Library';
+   s.sampletype = 'Illumina GBS Library';
 " > /tmp/$KEYFILE_BASE.psql
 
 # these next updates add an audit-trail of the import 
@@ -276,7 +276,7 @@ select
 from
    biosampleob as s join keyfile_temp as t on
    s.samplename = :samplename and
-   s.sampletype = 'Illumina Library'
+   s.sampletype = 'Illumina GBS Library'
 where not exists
    (select biosampleob from gbsKeyFileFact where
       Flowcell = t.Flowcell and 

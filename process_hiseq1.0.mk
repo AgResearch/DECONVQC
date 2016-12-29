@@ -152,7 +152,8 @@ versions.log:
 
 %.processed_in_progress/mapping_preview_in_progress: %.processed_in_progress/taxonomy_analysis
 	if [ ! -d $@ ]; then mkdir $@ ; fi
-	$(RUN_MAPPING_PREVIEW) $(notdir $(*F)) $(machine)
+	#$(RUN_MAPPING_PREVIEW) $(notdir $(*F)) $(machine)
+	$(RUN_MAPPING_PREVIEW) $(run) $@
 
 %.processed_in_progress/taxonomy_analysis: %.processed_in_progress/taxonomy_analysis_in_progress
 	# check it all looks right and then
@@ -176,7 +177,7 @@ versions.log:
 
 %.processed_in_progress/bcl2fastq: %.processed_in_progress/bcl2fastq_in_progress
 	# check it all looks right and then
-	find $< -name "*.fastq.gz" | sed 's/bcl2fastq_in_progress/bcl2fastq/g' - > $</fastq.list
+	find $</*/ -name "*.fastq.gz" | sed 's/bcl2fastq_in_progress/bcl2fastq/g' - > $</fastq.list
 	mv $< $@
 
 %.processed_in_progress/bcl2fastq_in_progress:

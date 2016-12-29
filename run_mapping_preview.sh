@@ -2,9 +2,9 @@
 
 if [ -z "$1" ]; then
    echo "usage :
-      ./run_mapping_preview.sh run_name  machine
+      ./run_mapping_preview.sh run_name  working folder
       e.g.
-      ./run_mapping_preview.sh 141217_D00390_0214_BC4UEHACXX hiseq
+      ./run_mapping_preview.sh 161219_D00390_0277_BC9P3HANXX /bifo/scratch/hiseq/postprocessing/161219_D00390_0277_BC9P3HANXX.processed/mapping_preview
       "
    exit 1
 fi
@@ -12,16 +12,13 @@ fi
 module load samtools
 
 RUN=$1
-MACHINE=$2
-HPC_RESOURCE=local
+WORKING_FOLDER=$2
 
-HISEQ_ROOT=/dataset/${MACHINE}/active
-BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
-RUN_ROOT=${BUILD_ROOT}/${RUN}.processed_in_progress
-PARAMETERS_FILE=$BUILD_ROOT/${RUN}.SampleProcessing.json
-WORKING_FOLDER=${RUN_ROOT}/mapping_preview_in_progress
-TAX_FOLDER=${RUN_ROOT}/taxonomy_analysis
-BCL2FASTQ_FOLDER=${RUN_ROOT}/bcl2fastq
+BCL2FASTQ_FOLDER=${WORKING_FOLDER}/../bcl2fastq/
+TAX_FOLDER=${WORKING_FOLDER}/../taxonomy_analysis
+PARAMETERS_FILE=${WORKING_FOLDER}/../../${RUN}.SampleProcessing.json
+RUN_ROOT=${WORKING_FOLDER}/..
+HPC_RESOURCE=condor
 
 if [ ! -f $PARAMETERS_FILE ]; then
    echo "$PARAMETERS_FILE missing - please run get_processing_parameters.py (for help , ./get_processing_parameters.py -h)"
@@ -63,7 +60,9 @@ for sample_trimmed_file in $TAX_FOLDER/*.fastq.trimmed.gz; do
       if [ ! -f ${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then 
          echo "queuing $sample_trimmed_file"
          REF_GENOME_MONIKER=`basename $REF_GENOME`
+         set -x
          nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  &
+         set +x
       fi
    else
       echo "skipping $sample_name (no reference specified)"

@@ -123,7 +123,8 @@ insert into hiseqSampleSheetFact (
    Operator ,
    SampleProject ,
    sampleplate,
-   samplewell)
+   samplewell,
+   downstream_processing)
 select
    obid,
    FCID ,
@@ -137,7 +138,8 @@ select
    Operator ,
    SampleProject, 
    sampleplate,
-   samplewell 
+   samplewell ,
+   downstream_processing
 from 
    bioSampleList as s join samplesheet_temp as t
    on s.listName = :run_name and 
@@ -147,14 +149,14 @@ insert into biosampleob(xreflsid, samplename, sampledescription, sampletype)
 select distinct
    SampleID,
    SampleID,
-   max(description),
-   'Illumina Library'
+   description,
+   case when t.downstream_processing = 'GBS' then 'Illumina GBS Library'
+   else 'Illumina Library'
+   end
 from
    samplesheet_temp t where
    sampleid is not null and 
-   not exists (select obid from biosampleob where samplename = t.SampleID)
-group by 
-   SampleID;
+   not exists (select obid from biosampleob where samplename = t.SampleID);
 
 insert into biosamplelistmembershiplink (biosamplelist, biosampleob)
 select 
