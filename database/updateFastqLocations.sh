@@ -98,22 +98,38 @@ function echo_opts() {
     echo LANE=$LANE
 }
 
+function get_gbs_list() {
+   if [ -f $PROCESSED_ROOT/$SAMPLE.gbslist ]; then
+      echo "** using existing list $PROCESSED_ROOT/$SAMPLE.gbslist **"
+   else
+      echo "** building $PROCESSED_ROOT/$SAMPLE.gbslist **"
+      filename_pattern=`psql -U agrbrdf -d agrbrdf -h invincible -v run=\'$RUN_NAME\' -v sample=\'$SAMPLE\' -v processed_root=\'$PROCESSED_ROOT\' -f $GBS_BIN/database/get_fastq_filename_pattern.psql -q`
+      find $PROCESSED_ROOT/bcl2fastq/*/ -name "*.fastq.gz" -print  | egrep  $filename_pattern > $PROCESSED_ROOT/$SAMPLE.gbslist
+      if [ ! -s $PROCESSED_ROOT/$SAMPLE.gbslist  ]; then
+         echo "*** error - could not find any sequence files for $SAMPLE under $PROCESSED_ROOT using $filename_pattern ***"
+         exit 1
+      fi
+   fi
+}
+
 get_opts $@
 
 check_opts
 
 echo_opts
 
+get_gbs_list
+
 echo "updating fastq locations in $KEY_DIR/$KEYFILE_BASE.txt for lane $LANE"
 echo "using "
-for listfile in $PROCESSED_ROOT/*$SAMPLE*.list; do
+for listfile in $PROCESSED_ROOT/*$SAMPLE*.gbslist; do
    echo "===>"$listfile 
    cat $listfile
 done
 
 # process the listfile to set up links
 echo "setting up link farm links"
-for listfile in $PROCESSED_ROOT/*$SAMPLE*.list; do
+for listfile in $PROCESSED_ROOT/*$SAMPLE*.gbslist; do
    echo "processing listfile $listfile"
    for fastqfile in `cat $listfile | grep L00${LANE}`; do
       echo "processing fastqfile $fastqfile"
