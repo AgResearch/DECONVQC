@@ -103,10 +103,13 @@ function get_gbs_list() {
       echo "** using existing list $PROCESSED_ROOT/$SAMPLE.gbslist **"
    else
       echo "** building $PROCESSED_ROOT/$SAMPLE.gbslist **"
-      filename_pattern=`psql -U agrbrdf -d agrbrdf -h invincible -v run=\'$RUN_NAME\' -v sample=\'$SAMPLE\' -v processed_root=\'$PROCESSED_ROOT\' -f $GBS_BIN/database/get_fastq_filename_pattern.psql -q`
+      filename_pattern=`psql -U agrbrdf -d agrbrdf -h invincible -v run=\'$RUN_NAME\' -v sample=\'$SAMPLE\' -v processed_root=\'$PROCESSED_ROOT\' -v lane=$LANE -f $GBS_BIN/database/get_fastq_filename_pattern.psql -q`
+      set -x
       find $PROCESSED_ROOT/bcl2fastq/*/ -name "*.fastq.gz" -print  | egrep  $filename_pattern > $PROCESSED_ROOT/$SAMPLE.gbslist
+      set +x
       if [ ! -s $PROCESSED_ROOT/$SAMPLE.gbslist  ]; then
          echo "*** error - could not find any sequence files for $SAMPLE under $PROCESSED_ROOT using $filename_pattern ***"
+         rm $PROCESSED_ROOT/$SAMPLE.gbslist
          exit 1
       fi
    fi
