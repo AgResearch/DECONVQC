@@ -39,7 +39,7 @@ def sanitise(options):
       if filter_record:
          # see if we have hit header
          #print record
-         header_matches = [True for item in record if re.match("(lane|sample_id|sample_name)",item,re.IGNORECASE) is not None]
+         header_matches = [True for item in record if re.match("(lane|sample[_]*id|sample[_]*project)",item,re.IGNORECASE) is not None]
          #print header_matches
          if len(header_matches) == 3:
             filter_record = False

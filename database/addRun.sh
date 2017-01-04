@@ -98,10 +98,21 @@ if [ -f /tmp/${RUN_NAME}.psql ]; then
 fi
 
 
+# parse the sample sheet
 #cp $RUN_ROOT/${RUN_NAME}/SampleSheet.csv /tmp/${RUN_NAME}.txt
 #awk -F, '{if(NF>5)print}' ${RUN_PATH}/SampleSheet.csv  > /tmp/${RUN_NAME}.txt
 cat ${RUN_PATH}/SampleSheet.csv | $GBS_BIN/database/sanitiseSampleSheet.py -r $RUN_NAME > /tmp/${RUN_NAME}.txt
+
+# check we got something non-trivial
+if [ ! -s /tmp/${RUN_NAME}.txt ]; then
+   echo "error parsed sample sheet /tmp/${RUN_NAME}.txt is missing or empty"
+   exit 1
+fi
+
+
 echo "
+
+
 insert into bioSampleList (xreflsid, listName, listComment)
 values(:run_name, :run_name, 'AgResearch Hiseq Run');
 
