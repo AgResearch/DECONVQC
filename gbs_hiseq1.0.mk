@@ -171,9 +171,9 @@ versions.log:
 
 %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg:  %.sample_in_progress/uneak_in_progress/KGD
 	mkdir -p $(dir $@)
-	$(GBS_BIN)/kmer_entropy.py -b $(dir $@) -t zipfian -k 6 -p 1 -o $(dir $@)/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt
-	$(GBS_BIN)/kmer_entropy.py -b $(dir $@) -t frequency -k 6 -p 1 -o $(dir $@)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt
-	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $(GBS_BIN)/kmer_plots_gbs.r datafolder=$(dir $@)
+	$(GBS_BIN)/kmer_entropy.py -b $(dir $@) -t zipfian -k 6 -p 1 -o $(dir $@)/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt 1>$(dir $@)/zipfian.stdout 2>$(dir $@)/zipfian.stderr
+	$(GBS_BIN)/kmer_entropy.py -b $(dir $@) -t frequency -k 6 -p 1 -o $(dir $@)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt 1>$(dir $@)/frequency.stdout 2>$(dir $@)/frequency.stderr
+	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $(GBS_BIN)/kmer_plots_gbs.r datafolder=$(dir $@) 1>$(dir $@)/plots.stdout 2>$(dir $@)/plots.stderr
 
 %.sample_in_progress/uneak_in_progress/KGD: %.sample_in_progress/uneak_in_progress/hapMap
 	mkdir -p $@
