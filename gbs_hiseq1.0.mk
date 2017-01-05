@@ -132,7 +132,7 @@ versions.log:
 	# make the key file
 	# set up any required soft links to sequences to satisfy tassel 
 	mv $< $@
-        touch $@
+	touch $@
 
 %.gbs_in_progress: $(processed_samples)
 	echo making $@
@@ -140,7 +140,7 @@ versions.log:
 %.processed_sample: %.sample_in_progress
 	# check it all looks right and then
 	mv $< $@
-        touch $@
+	touch $@
 
 %.sample_in_progress: %.sample_in_progress/uneak
 	# check it looks ok
@@ -150,7 +150,7 @@ versions.log:
 	# check it all looks right and then
 	./check_uneak_run.sh $< global
 	mv $< $@
-        touch $@
+	touch $@
 
 # (uneak_in_progress no longer depends on blast analysis as blast analysis 
 # is slow , so we will usually do that later - to include blast analysis as a dependency ,
@@ -177,37 +177,37 @@ versions.log:
 
 %.sample_in_progress/uneak_in_progress/KGD: %.sample_in_progress/uneak_in_progress/hapMap
 	mkdir -p $@
-        touch $@
+	touch $@
 	$(GBS_BIN)/run_kgd.sh $@ 
 
 %.sample_in_progress/uneak_in_progress/hapMap: %.sample_in_progress/uneak_in_progress/mapInfo
 	mkdir -p $@
-        touch $@
+	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UMapInfoToHapMapPlugin -w ./ -mnMAF 0.03 -mxMAF 0.5 -mnC 0.1 -endPlugin -runfork1 > UMapInfoToHapMap.out 2> UMapInfoToHapMap.se
 
 %.sample_in_progress/uneak_in_progress/mapInfo: %.sample_in_progress/uneak_in_progress/tagsByTaxa
 	mkdir -p $@
-        touch $@
+	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTBTToMapInfoPlugin -w ./ -endPlugin -runfork1 > UTBTToMapInfo.out 2> UTBTToMapInfo.se 
 
 %.sample_in_progress/uneak_in_progress/tagsByTaxa: %.sample_in_progress/uneak_in_progress/tagPair
 	mkdir -p $@
-        touch $@
+	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTagPairToTBTPlugin -w ./ -endPlugin -runfork1 > UTagPairToTBT.out 2> UTagPairToTBT.se 
 
 %.sample_in_progress/uneak_in_progress/tagPair: %.sample_in_progress/uneak_in_progress/mergedTagCounts
 	mkdir -p $@
-        touch $@
+	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTagCountToTagPairPlugin -w ./ -e 0.03 -endPlugin -runfork1 > UTagCountToTagPair.out 2> UTagCountToTagPair.se 
 
 %.sample_in_progress/uneak_in_progress/mergedTagCounts: %.sample_in_progress/uneak_in_progress/tagCounts
 	mkdir -p $@
-        touch $@
+	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UMergeTaxaTagCountPlugin -w ./ -m 600000000 -x 100000000 -c 5 -endPlugin -runfork1 > UMergeTaxaTagCount.out 2> UMergeTaxaTagCount.se 
 
 %.sample_in_progress/uneak_in_progress/tagCounts: %.sample_in_progress/uneak_in_progress/Illumina  %.sample_in_progress/uneak_in_progress/key
 	mkdir -p $@
-        touch $@
+	touch $@
 	enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; echo "making UFastqToTagCount using enzyme $$enzyme"
 	cd $@/..; enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $$enzyme -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e PstI -s 300000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
@@ -216,12 +216,12 @@ versions.log:
 
 %.sample_in_progress/uneak_in_progress/Illumina: 
 	mkdir -p $@
-        touch $@
+	touch $@
 	$(GBS_BIN)/link_fastq_files.sh $@
 
 %.sample_in_progress/uneak_in_progress/key: 
 	mkdir -p $@
-        touch $@
+	touch $@
 	$(GBS_BIN)/link_key_files.sh $@
 
 
