@@ -3,6 +3,7 @@
 \pset footer off
 \o /dataset/hiseq/scratch/postprocessing/sample_species.txt
 
+select samplename, agg_comma_concat(species) as species from (
 select 
    samplename,
    agg_comma_concat(species) as species
@@ -18,12 +19,16 @@ group by
    samplename
 union 
 select 
-   regexp_replace(h.sampleproject,E'[\-_]','.') ,
+   replace(regexp_replace(h.sampleproject,E'[\-_]','.'),' ','_') as samplename,
    substr(agg_comma_concat(h.description),1,64) as species
 from
    hiseqsamplesheetfact as h 
+where 
+   upper(downstream_processing) = 'GBS'
 group by 
-   regexp_replace(h.sampleproject,E'[\-_]','.')
+   replace(regexp_replace(h.sampleproject,E'[\-_]','.'),' ','_')
+) as union_query
+group by samplename
 order by
    1
 

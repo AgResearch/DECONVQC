@@ -234,7 +234,7 @@ for processed_run_folder in $processed_run_folders; do
          echo "Rscript --vanilla  $GBS_BIN/tags_plots.r  run_name=$RUN"
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
          echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
-         for species_pattern in mussell salmon deer sheep cattle ryegrass clover ; do
+         for species_pattern in mussel salmon deer sheep cattle ryegrass clover ; do
             echo "$GBS_BIN/database/make_species_peacock_plots.sh $BUILD_ROOT/peacock_data.txt $species_pattern"
          done
          echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
@@ -246,7 +246,7 @@ for processed_run_folder in $processed_run_folders; do
          Rscript --vanilla  $GBS_BIN/tags_plots.r run_name=$RUN
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
          $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
-         for species_pattern in mussell salmon deer sheep cattle ryegrass clover ; do
+         for species_pattern in mussel salmon deer sheep cattle ryegrass clover ; do
             $GBS_BIN/database/make_species_peacock_plots.sh $BUILD_ROOT/peacock_data.txt $species_pattern
          done
          $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt

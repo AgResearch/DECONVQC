@@ -121,6 +121,7 @@ Plot Index Pages
 <li> <a href="peacock_salmon_index.html"> By Plot Type (Salmon) </a>
 <li> <a href="peacock_deer_index.html"> By Plot Type (Deer) </a>
 <li> <a href="peacock_sheep_index.html"> By Plot Type (Sheep) </a>
+<li> <a href="peacock_goat_index.html"> By Plot Type (Goat) </a>
 <li> <a href="peacock_cattle_index.html"> By Plot Type (Cattle) </a>
 <li> <a href="peacock_ryegrass_index.html"> By Plot Type (Ryegrass) </a>
 <li> <a href="peacock_clover_index.html"> By Plot Type (Clover) </a>
