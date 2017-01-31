@@ -1,0 +1,150 @@
+\a
+\f '\t'
+\pset footer off
+\o /dataset/hiseq/scratch/postprocessing/extract_hiseq_reads_tags_cv.txt
+select 
+   g.flowcell,
+   g.lane ,
+   g.barcode,
+   g.sample ,
+   g.platename ,
+   g.platerow ,
+   g.platecolumn ,
+   g.libraryprepid,
+   g.counter ,
+   g.comment ,
+   g.enzyme ,
+   g.species ,
+   g.numberofbarcodes, 
+   g.bifo ,
+   g.control ,
+   g.fastq_link,
+   y.tag_count,
+   y.read_count
+from 
+   gbskeyfilefact as g left outer join gbsYieldFact as y on
+   g.sample = y.sampleid and 
+   g.flowcell = y.flowcell and 
+   g.lane = y.lane ;
+
+/*
+flowcell lane barcode sample platename row column libraryprepid counter comment enzyme species numberofbarcodes bifo control fastq_link
+C4TPMACXX 1 AACAACGT GA086 SQ2503 F 10 2503 70 GA194 ApeKI Ryegrass 96 Mingshu Cao /dataset/hiseq/active/fastq-link-farm/SQ2503_C4TPMACXX_s_1_fastq.txt.gz
+C4TPMACXX 1 AACAATAGT GA009 SQ2503 H 1 2503 85 GA194 ApeKI Ryegrass 96 Mingshu Cao /dataset/hiseq/active/fastq-link-farm/SQ2503_
+
+
+select
+   b.obid,
+   t.sqname,
+   t.sampleid,
+   t.flowcell,
+   g.lane,
+   g.libraryprepid,
+   to_number(t.tag_count,'999999999999'),
+   to_number(t.read_count, '999999999999')
+from
+   (gbskeyfilefact as g join gbs_yield_import_temp as t on
+   g.flowcell = t.flowcell and
+   ltrim(rtrim(to_char(g.lane,'9'))) = t.lane and
+   ltrim(rtrim(to_char(g.libraryprepid,'999999'))) = t.sqnumber and
+   g.sample = t.sampleid ) join biosamplelist as b on
+   b.listname = t.run
+where not exists (
+   select sampleid from  gbsYieldFact where
+   sampleid = g.sample and
+   flowcell = g.flowcell and
+   lane = g.lane );
+
+
+
+
+agrbrdf=> select * from gbskeyfilefact where sample = '998634';
+ factid | biosampleob | flowcell  | lane |  barcode  | sample | platename | platerow | platecolumn | libraryprepid | counter |  comment   | enzyme |     species     | numberofba
+rcodes |       bifo       |                               fastq_link                                | createddate | createdby | voptypeid | control | barcodedsampleob | subjectn
+ame
+--------+-------------+-----------+------+-----------+--------+-----------+----------+-------------+---------------+---------+------------+--------+-----------------+-----------
+-------+------------------+-------------------------------------------------------------------------+-------------+-----------+-----------+---------+------------------+---------
+----
+   8616 |    81406751 | C6JPMANXX |    7 | ACCATGACA | 998634 | SQ0088    | G        |           6 |            88 |      78 | SRS_Box3_4 | PstI   | Atlantic_salmon | 96
+       | Rudiger Brauning | /dataset/hiseq/active/fastq-link-farm/SQ0088_C6JPMANXX_s_7_fastq.txt.gz | 2015-09-21  |           |           |         |                  |   162588
+0
+(1 row)
+
+agrbrdf=> select * from  gbs_yield_import_temp where sampleid = '998634';
+              run              | sqname | sampleid | flowcell  | lane | sqnumber | tag_count | read_count
+-------------------------------+--------+----------+-----------+------+----------+-----------+------------
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | 998634   | C6JPMANXX | 7    | 88       | 422422    | 2154144
+(1 row)
+
+              run              | sqname |            sampleid             |   flowcell   |   lane    | sqnumber  | tag_count | read_count
+-------------------------------+--------+---------------------------------+--------------+-----------+-----------+-----------+------------
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | sample                          | flowcell     | lane      | sq        | tags      | reads
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | total                           | C6JPMANXX    | 7         | 88        |           | 211124459
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | good                            | C6JPMANXX    | 7         | 88        |           | 202570647
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | 998599                          | C6JPMANXX    | 7         | 88        | 231088    | 776567
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | 998605                          | C6JPMANXX    | 7         | 88        | 419450    | 2148562
+ 150515_D00390_0227_BC6JPMANXX | SQ0088 | 998634                          | C6JPMANXX    | 7         | 88        | 422422    | 2154144
+
+insert into obtype (obtypeid , displayname, tablename, namedInstances, obtypedescription,isop,displayurl)
+values(105,'GBS yield stats','gbsYieldFact',FALSE,'GBS yield fact',TRUE,'tag.png');
+create sequence gbsyf_factidseq;
+create table gbsYieldFact (
+   factid integer  DEFAULT nextval('gbsyf_factidseq') primary key,
+   bioSampleList integer not null references bioSampleList(obid),
+   bioSampleOb integer references bioSampleOb(obid),
+   sqname character varying(32),
+   sampleid character varying(32),
+   flowcell character varying(32),
+   lane integer,
+   sqnumber integer,
+   tag_count integer,
+   read_count integer)
+   without oids;
+\echo initialising optypesignature
+insert into optypesignature (   obtypeid , argobtypeid , optablecolumn )
+select 105,   obtypeid,   'bioSampleList' from obtype where  upper(tablename) = 'BIOSAMPLELIST';
+
+create table gbs_yield_import_temp (
+   run character varying(64),
+   sqname character varying(32),
+   sampleid character varying(32),
+   flowcell character varying(32),
+   lane character varying(32),
+   sqnumber character varying(32),
+   tag_count character varying(32),
+   read_count character varying(32))
+   without oids;
+
+
+agrbrdf=> \d gbskeyfilefact
+                                    Table "public.gbskeyfilefact"
+      Column      |          Type          |                        Modifiers
+------------------+------------------------+---------------------------------------------------------
+ factid           | integer                | not null default nextval('keyfile_factidseq'::regclass)
+ biosampleob      | integer                | not null
+ flowcell         | character varying(32)  |
+ lane             | integer                |
+ barcode          | character varying(32)  |
+ sample           | character varying(32)  |
+ platename        | character varying(32)  |
+ platerow         | character varying(32)  |
+ platecolumn      | integer                |
+ libraryprepid    | integer                |
+ counter          | integer                |
+ comment          | character varying(256) |
+ enzyme           | character varying(32)  |
+ species          | character varying(256) |
+ numberofbarcodes | character varying(4)   |
+ bifo             | character varying(256) |
+ fastq_link       | character varying(256) |
+ createddate      | date                   | default now()
+ createdby        | character varying(256) |
+ voptypeid        | integer                |
+ control          | character varying(64)  |
+ barcodedsampleob | integer                |
+ subjectname      | character varying(64)  |
+
+
+
+
+*/
