@@ -17,10 +17,13 @@ peacock of %(run_name)s
 </title>
 </head>
 <body>
-<h2> Contents </h2>
+<h1> Deconvolution and Q/C results for <a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=%(run_name)s&context=default">%(run_name)s</a> </h1>
 <ul>
 <li> <a href="#plots"> Plots </a>
-<li> <a href="#spreadsheets"> Spreadsheet Summaries </a>
+<li> <a href="#spreadsheets"> Spreadsheet Summaries, Log files and Plot index pages </a>
+<li> <a href="#references"> References </a>
+<li> <a href="#notes"> Notes </a>
+
 </ul>
 """
 
@@ -62,7 +65,7 @@ footer1="""
 <table width="30%%" align=center>
 <tr>
 <td>
-<img src="taxonomy_clustering.jpg"/>
+%(blast_cluster_plot_link)s
 </td>
 </tr>
 </table>
@@ -70,15 +73,123 @@ footer1="""
 <table width="30%%" align=center>
 <tr>
 <td>
-<img src="tags_summary.jpg"/>
+<img src="tags_summary_%(run_name)s.jpg"/>
 </td>
 </tr>
 <tr>
 <td>
-<img src="read_summary.jpg"/>
+<img src="read_summary_%(run_name)s.jpg"/>
 </td>
 </tr>
 </table>
+
+
+<h2 id="spreadsheets"> Spreadsheet Summaries and Log Files</h2>
+<table width=60%% align=left>
+<tr>
+<td>
+Q/C Blast results by lane and species
+</td>
+<td>
+<ul>
+<li> <a href="all_freq.xlsx"> All </a>
+<li> <a href="bacteria_freq.xlsx"> Just Bacteria  </a>
+</ul>
+</td>
+</tr>
+
+<tr>
+<td>
+Tag Counts by lane 
+</td>
+<td>
+<ul>
+<li> <a href="all_tag_count_summaries.xlsx"> Tag Counts </a>
+</ul>
+</td>
+</tr>
+
+<tr>
+<td>
+Plot Index Pages 
+</td>
+<td>
+<ul>
+<li> <a href="peacock_index.html"> By Plot Type (All samples) </a>
+<p/>
+<li> <a href="peacock_mussel_index.html"> By Plot Type (Mussel) </a>
+<li> <a href="peacock_salmon_index.html"> By Plot Type (Salmon) </a>
+<li> <a href="peacock_deer_index.html"> By Plot Type (Deer) </a>
+<li> <a href="peacock_sheep_index.html"> By Plot Type (Sheep) </a>
+<li> <a href="peacock_cattle_index.html"> By Plot Type (Cattle) </a>
+<li> <a href="peacock_ryegrass_index.html"> By Plot Type (Ryegrass) </a>
+<li> <a href="peacock_clover_index.html"> By Plot Type (Clover) </a>
+<p/> 
+<li> <a href="peacock_run_index.html"> By Run </a>
+</ul>
+</td>
+</tr>
+
+<tr>
+<td>
+pre-GBS Q/C 
+</td>
+<td>
+<ul>
+<li> <a href="%(run_name)s.processed/fastqc_analysis"> FASTQC </a>
+<li> <a href="%(run_name)s.processed/taxonomy_analysis"> Blast Results </a> 
+<li> <a href="%(run_name)s.processed/mapping_preview"> Mapping against Reference </a> 
+</ul>
+</td>
+</tr>
+
+
+<tr>
+<td>
+Illumina and other (pre-GBS) log files 
+</td>
+<td>
+<ul>
+<li> <a href="%(run_name)s.log"> pipeline log </a> 
+<li> <a href="%(run_name)s_bcl2fastq.log"> bcl2fastq log </a>
+<li> <a href="%(run_name)s_configureBclToFastq.log"> bcl2fastq configure log </a>
+</ul>
+</td>
+</tr>
+
+
+<tr>
+<td>
+GBS Q/C log files and results  
+</td>
+<td>
+<ul>
+<li> <a href="%(run_name)s.gbs"> GBS results </a>
+<li> <a href="%(run_name)s.gbs.log"> GBS pipeline log </a> 
+</ul>
+</td>
+</tr>
+
+
+<tr>
+<td>
+<h2 id="references"> References </h2>
+<ul>
+<li> <a href="http://agbrdf.agresearch.co.nz/index.html">http://agbrdf.agresearch.co.nz/index.html</a>  has links to runs, sample sheets and key-files.
+<li> DECONVQC source code and documentation : <a href="https://github.com/AgResearch/DECONVQC"> https://github.com/AgResearch/DECONVQC </a>
+<li> Keyfile repo : <a href="https://hg.agresearch.co.nz/hg/gbs_keyfiles/"> https://hg.agresearch.co.nz/hg/gbs_keyfiles/ </a> 
+</ul>
+</td>
+</tr>
+
+<tr>
+<td>
+<h2 id="notes"> Notes </h2>
+</td>
+</tr>
+</table>
+
+
 </body>
 </html>
 """
@@ -103,7 +214,6 @@ def generate_run_plot(options):
     with open(options["output_filename"],"w") as out_stream:
 
         print >> out_stream, header1%options
-        print >> out_stream, """<h1> Plots for <a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=%(run_name)s&context=default">%(run_name)s</a> </h1>"""%options
         
         with open(options["key_file_summary"][0],"r") as in_stream:
             # get an iteration of dictionaries - this parses the tab-delimited file as
@@ -168,8 +278,15 @@ def generate_run_plot(options):
                         print >> out_stream,"</td>"
                     print >> out_stream,"</tr>"
                 print >> out_stream, "</table>"
-                
-            print >> out_stream, footer1
+
+            options["blast_cluster_plot_link"] = "<img src=\"taxonomy_clustering_%(run_name)s.jpg\"/>"%options
+            if not os.path.isfile(os.path.join(BASEDIR,"taxonomy_clustering_%(run_name)s.jpg"%options)): 
+                options["blast_cluster_plot_link"] = "<font size=-1> (unavailable) </font>" 
+            
+
+            print >> out_stream, footer1%options
+
+
 
         print stats
                 

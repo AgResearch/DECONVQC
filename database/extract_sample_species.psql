@@ -16,5 +16,15 @@ from (
    ) as distinct_species
 group by 
    samplename
-order by 
+union 
+select 
+   regexp_replace(h.sampleproject,E'[\-_]','.') ,
+   substr(agg_comma_concat(h.description),1,64) as species
+from
+   hiseqsamplesheetfact as h 
+group by 
+   regexp_replace(h.sampleproject,E'[\-_]','.')
+order by
    1
+
+

@@ -121,7 +121,7 @@ versions.log:
 ######################################################################
 # top level targets
 ######################################################################
-.PHONY : %.all  %.uneak
+.PHONY : %.all  %.uneak %.blast_analysis
 %.all: %.gbs 
 	echo making $@
 %.uneak: %.gbs 
@@ -133,6 +133,9 @@ versions.log:
 	# set up any required soft links to sequences to satisfy tassel 
 	mv $< $@
 	touch $@
+
+%.blast_analysis: $(blast_analyses) 
+	echo making $@
 
 %.gbs_in_progress: $(processed_samples)
 	echo making $@
@@ -156,14 +159,15 @@ versions.log:
 # is slow , so we will usually do that later - to include blast analysis as a dependency ,
 # the dependency list woudl be : 
 # uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg   %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg
-%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
+#%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
+#now do these other analyses later
+%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/KGD
 	# check it looks ok
 	echo "checking $@"
 
 
-# The two targets here support running the blast analysis either synchronously as part of the main
-# build (the second target - good but the delays the final build), or later on (the first target)
-%.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg:  %.sample_in_progress/uneak_in_progress/KGD
+# The target here supports running the blast analysis later on as a seperate run after the main gbs analysis is finished
+%.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg :  %.processed_sample/uneak/KGD
 	mkdir -p $(dir $@)
 	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $</../tagCounts/ -O $(dir $@) 1>$(dir $@)/blast.stdout 2>$(dir $@)/blast.stderr
 	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $(dir $@) 1>$(dir $@)/summary.stdout 2>$(dir $@)/summary.stderr
@@ -228,7 +232,7 @@ versions.log:
 ##############################################
 # specify the intermediate files to keep 
 ##############################################
-.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.sample_in_progress/uneak_in_progress/kmer_analysis %.sample_in_progress/uneak_in_progress/blast_analysis %.sample_in_progress/uneak_in_progress/KGD %.sample_in_progress/uneak_in_progress/hapMap %.sample_in_progress/uneak_in_progress/mapInfo %.sample_in_progress/uneak_in_progress/tagsByTaxa %.sample_in_progress/uneak_in_progress/tagPair %.sample_in_progress/uneak_in_progress/mergedTagCounts %.sample_in_progress/uneak_in_progress/tagCounts %.sample_in_progress/uneak_in_progress/Illumina %.sample_in_progress/uneak_in_progress/key %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
+.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.sample_in_progress/uneak_in_progress/kmer_analysis %.sample_in_progress/uneak_in_progress/blast_analysis %.processed_sample/uneak/blast_analysis %.sample_in_progress/uneak_in_progress/KGD %.sample_in_progress/uneak_in_progress/hapMap %.sample_in_progress/uneak_in_progress/mapInfo %.sample_in_progress/uneak_in_progress/tagsByTaxa %.sample_in_progress/uneak_in_progress/tagPair %.sample_in_progress/uneak_in_progress/mergedTagCounts %.sample_in_progress/uneak_in_progress/tagCounts %.sample_in_progress/uneak_in_progress/Illumina %.sample_in_progress/uneak_in_progress/key %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg %.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
 
 ##############################################
 # cleaning - not yet doing this using make  

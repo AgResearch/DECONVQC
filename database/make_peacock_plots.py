@@ -46,6 +46,44 @@ peacock of %(image_file_name)s
 </tr>
 """
 
+header2="""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "httpd://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>
+peacock of %(image_file_name)s restricted to %(species_pattern)s
+</title>
+</head>
+<body>
+<table width=90%% align=center>
+<tr>
+<td>
+<h2> Lane 1 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 2 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 3 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 4 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 5 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 6 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 7 %(species_pattern)s </h2> 
+</td>
+<td>
+<h2> Lane 8 %(species_pattern)s </h2> 
+</td>
+</tr>
+"""
+
 footer1="""
 </table>
 </table>
@@ -65,7 +103,12 @@ def generate_peacock(options):
     
     with open(options["output_filename"],"w") as out_stream:
 
-        print >> out_stream, header1%options
+        if options["species_pattern"] is None:
+            print >> out_stream, header1%options
+        else:
+            print >> out_stream, header2%options
+            
+            
         
         with open(options["key_file_summary"][0],"r") as in_stream:
             # get an iteration of dictionaries - this parses the tab-delimited file as
@@ -108,7 +151,8 @@ def generate_peacock(options):
                         else:
                             samples[0].update(options)
                             stats["found file count"] += 1
-                            print >> out_stream, """
+                            if (options["species_pattern"] is None or re.search(options["species_pattern"], samples[0]["species_summary"], re.IGNORECASE) is not None):
+                                print >> out_stream, """
         <h3 align=center> %(species_summary)s </h3> <h4 align=center> <font size=-2>
         %(run)s <a href="http://agbrdf.agresearch.co.nz/cgi-bin/fetch.py?obid=%(samplename)s&context=default"> %(samplename)s </a>
         </font></h4> 
@@ -149,6 +193,7 @@ run     run_number      lane    samplename      species image_file_name
     parser.add_argument('-H', '--image_height' , dest='image_height', default=300, type=int, help="image height")
     parser.add_argument('-W', '--image_width' , dest='image_width', default=300, type=int, help="image width")
     parser.add_argument('-o', '--output_filename' , dest='output_filename', default="peacock.html", type=str, help="name of output file")
+    parser.add_argument('-s', '--species_pattern' , dest='species_pattern', default=None, type=str, help="specify a species")
 
     
     args = vars(parser.parse_args())

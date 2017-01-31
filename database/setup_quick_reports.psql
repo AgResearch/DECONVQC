@@ -268,6 +268,46 @@ where xreflsid = 'gbs_enzymes_report1';
 */
 
 
+insert into datasourceob(
+ xreflsid     ,
+ datasourcename ,
+ datasourcetype  ,
+ datasourcecomment ,
+ datasourcecontent
+)
+values(
+ 'gbs_yield_report1',
+ 'GBS Yield Report',
+ 'SQL',
+ 'Query to extract gbs yield information',
+'
+select
+   g.flowcell,
+   g.lane ,
+   g.barcode,
+   g.sample ,
+   g.platename ,
+   g.platerow ,
+   g.platecolumn ,
+   g.libraryprepid,
+   g.counter ,
+   g.comment ,
+   g.enzyme ,
+   g.species ,
+   g.numberofbarcodes,
+   g.bifo ,
+   g.control ,
+   g.fastq_link,
+   y.tag_count,
+   y.read_count
+from
+   gbskeyfilefact as g left outer join gbsYieldFact as y on
+   g.sample = y.sampleid and
+   g.flowcell = y.flowcell and
+   g.lane = y.lane') ;
+
+
+
 
 
 
