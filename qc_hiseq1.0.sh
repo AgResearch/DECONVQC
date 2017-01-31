@@ -1,5 +1,8 @@
 #!/bin/sh
-# see http://wiki.bash-hackers.org/howto/getopts_tutorial for getops tips 
+#
+# this does generic Q/C on the hiseq output.
+# it is run after process_hiseq.sh , and usually concurrently with gbs_hiseq.sh
+# 
 # examples : 
 # ./qc_hiseq1.0.sh -n -r 150515_D00390_0227_BC6JPMANXX
 # ./qc_hiseq1.0.sh -n -a mapping -r 150515_D00390_0227_BC6JPMANXX
@@ -199,14 +202,42 @@ for completed_run_landmark in $completed_run_landmarks; do
       set +x
    fi
 
+
+   function post_make() {
+
+      if [ $DRY_RUN == "yes" ]; then
+         echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
+         echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
+         echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
+         echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
+         echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
+         echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
+      else
+         psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
+         $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
+         Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
+         psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
+         $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
+         $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
+      fi
+   }
+
+
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
-      set -x
+      echo "
       make -n -d -f qc_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.qc.log 2>&1
+      post_make
+      "
    else
       set -x
       make -d -f qc_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.qc.log 2>&1
-      echo ""
+      if [ $? == 0 ]; then
+         post_make
+      else
+         echo "(non-zero exit status from make - skipping post_make)"
+         exit 1
+      fi
    fi
 
    # make a precis of the log file for easier reading

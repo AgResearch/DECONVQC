@@ -1,5 +1,8 @@
 #!/bin/sh
-# see http://wiki.bash-hackers.org/howto/getopts_tutorial for getops tips 
+#
+# This the first processing step, run after the hiseq run completes (as indicated
+# by the file RTAComplete.txt appearing the run folder
+#
 # examples : 
 # ./process_hiseq1.0.sh -n -r 150515_D00390_0227_BC6JPMANXX
 # ./process_hiseq1.0.sh -r 150515_D00390_0227_BC6JPMANXX

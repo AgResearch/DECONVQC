@@ -1,5 +1,8 @@
 #!/bin/sh
-# see http://wiki.bash-hackers.org/howto/getopts_tutorial for getops tips 
+#
+# this does extended  GBS Q/C 
+# it is run after gbs_hiseq.sh 
+# 
 
 function get_opts() {
 
@@ -221,32 +224,55 @@ for processed_run_folder in $processed_run_folders; do
    # run the task 
    MAKE_TARGET="qc"
 
+   function post_make() {
+
+      if [ $DRY_RUN == "yes" ]; then
+         echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
+         echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
+         echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
+         echo "$GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN"
+         echo "Rscript --vanilla  $GBS_BIN/tags_plots.r  run_name=$RUN"
+         echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
+         echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
+         for species_pattern in mussell salmon deer sheep cattle ryegrass clover ; do
+            echo "$GBS_BIN/database/make_species_peacock_plots.sh $BUILD_ROOT/peacock_data.txt $species_pattern"
+         done
+         echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
+      else
+         psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
+         $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
+         Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
+         $GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN
+         Rscript --vanilla  $GBS_BIN/tags_plots.r run_name=$RUN
+         psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
+         $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
+         for species_pattern in mussell salmon deer sheep cattle ryegrass clover ; do
+            $GBS_BIN/database/make_species_peacock_plots.sh $BUILD_ROOT/peacock_data.txt $species_pattern
+         done
+         $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
+      fi
+
+      # make a precis of the log file for easier reading
+      #make -f gbs_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${processed_run_folder}.logprecis > /dev/null 2>&1
+      # make a summary of the versions of software that were run
+      #make -f gbs_hiseq1.0.mk -i --no-builtin-rules versions.log
+
+   }
+
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
       set -x
       make -n -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
-      echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
-      echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
-      echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
-      echo "$GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN"
-      echo "Rscript --vanilla  $GBS_BIN/tags_plots.r  run_name=$RUN"
-      echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
-      echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
-      echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
+      post_make
    else
       set -x
       make -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
-      psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
-      $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
-      Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
-      $GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN
-      Rscript --vanilla  $GBS_BIN/tags_plots.r run_name=$RUN
-      psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
-      $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
-      for species_pattern in mussell salmon deer sheep cattle ryegrass clover ; do
-          $GBS_BIN/database/make_species_peacock_plots.sh $BUILD_ROOT/peacock_data.txt $species_pattern
-      done
-      $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
+      if [ $? == 0 ]; then
+         post_make
+      else
+         echo "(non-zero exit status from make - skipping post_make)"
+         exit 1
+      fi
    fi
 
    # make a precis of the log file for easier reading
