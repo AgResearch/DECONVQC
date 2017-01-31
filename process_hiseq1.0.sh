@@ -2,24 +2,19 @@
 # see http://wiki.bash-hackers.org/howto/getopts_tutorial for getops tips 
 # examples : 
 # ./process_hiseq1.0.sh -n -r 150515_D00390_0227_BC6JPMANXX
-# ./process_hiseq1.0.sh -n -a mapping -r 150515_D00390_0227_BC6JPMANXX
 # ./process_hiseq1.0.sh -r 150515_D00390_0227_BC6JPMANXX
-# ./process_hiseq1.0.sh -a contamination -r 150515_D00390_0227_BC6JPMANXX
 
 function get_opts() {
 
 help_text="
  examples : \n
  ./process_hiseq1.0.sh -i -n -r 150515_D00390_0227_BC6JPMANXX \n
- ./process_hiseq1.0.sh -i -n -a mapping -r 150515_D00390_0227_BC6JPMANXX \n
  ./process_hiseq1.0.sh -i -r 150515_D00390_0227_BC6JPMANXX \n
- ./process_hiseq1.0.sh -i -a contamination -r 150515_D00390_0227_BC6JPMANXX \n
- ./process_hiseq1.0.sh -i -a bcl2fastq -r 150515_D00390_0227_BC6JPMANXX \n
 "
 
 DRY_RUN=no
 INTERACTIVE=no
-ANALYSIS=all
+ANALYSIS=bcl2fastq
 RUN=all
 MACHINE=hiseq
 
@@ -68,14 +63,8 @@ if [ -z "$GBS_BIN" ]; then
    exit 1
 fi
 
-if [[ ( $ANALYSIS != "all" ) && ( $ANALYSIS != "mapping" ) && ( $ANALYSIS != "contamination" )  && ( $ANALYSIS != "bcl2fastq" ) ]]; then
-    echo "Invalid analysis name - must be mapping , contamination or all " >&2
-    exit 1
-fi
-
-# only allow specific anlayses for specific runs
-if [[ ( $ANALYSIS != "all" ) && ( $RUN == "all" ) ]]; then
-    echo "sorry , can't run specific analysis on all runs - please specify a run name for this"
+if [[ ( $ANALYSIS != "bcl2fastq" ) ]]; then
+    echo "Invalid analysis name - must be bcl2fastq " >&2
     exit 1
 fi
 
@@ -94,10 +83,6 @@ function echo_opts() {
     echo "dry run : $DRY_RUN"
     echo "interactive : $INTERACTIVE"
     echo "machine : $MACHINE"
-}
-
-function load_modules() {
-    module load bcl2fastq
 }
 
 function get_parameters() {
@@ -130,27 +115,7 @@ check_opts
 
 echo_opts
 
-load_modules
-
-# from here , in line code to do the processing
-RUN_ROOT=${BUILD_ROOT}/${RUN}.processed_in_progress
-BCL2FASTQ_FOLDER=${RUN_ROOT}/bcl2fastq
-PARAMETERS_FILE=$BUILD_ROOT/${RUN}.SampleProcessing.json
-
-if [ $RUN == "all"  ]; then 
-   echo " are you sure you want to check all runs ? (y/n)"
-   read response
-   if [ "$response" != "y" ]; then
-      echo "OK - to process a single run, enter (e.g.)
-      ./process_hiseq1.0.sh -r 150326_D00390_0220_BC6GKKANXX
-      "
-      echo "quitting"
-      exit 1
-   fi
-   completed_run_landmarks=$HISEQ_ROOT/*/RTAComplete.txt
-else
-   completed_run_landmarks=$HISEQ_ROOT/$RUN/RTAComplete.txt
-fi
+completed_run_landmarks=$HISEQ_ROOT/$RUN/RTAComplete.txt
 
 for completed_run_landmark in $completed_run_landmarks; do
    if [ ! -f $completed_run_landmark ]; then
@@ -189,25 +154,6 @@ for completed_run_landmark in $completed_run_landmarks; do
    get_parameters
 
    MAKE_TARGET="all"
-
-   if [ $ANALYSIS != "all" ]; then
-
-      if [ $ANALYSIS == "mapping" ]; then
-         set -x
-         rm -Ir $MAPPING_FOLDER
-         MAKE_TARGET="processed_in_progress/mapping_preview"
-      elif [ $ANALYSIS == "contamination" ]; then
-         set -x
-         MAKE_TARGET="processed_in_progress/taxonomy_analysis"
-      elif [ $ANALYSIS == "bcl2fastq" ]; then
-         set -x
-         MAKE_TARGET="processed_in_progress/bcl2fastq"
-      else
-         echo "Invalid analysis name - must be mapping , contamination , bcl2fastq or all " >&2
-         exit 1
-      fi
-      set +x
-   fi
 
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"

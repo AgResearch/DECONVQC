@@ -164,6 +164,7 @@ function get_samples_deprecated() {
 }
 
 function get_samples() {
+   set -x
    my_processed_root=$1
    my_run_root=$2
 
@@ -183,6 +184,7 @@ function get_samples() {
 
    echo DEBUG $sample_monikers
    echo DEBUG $sample_targets
+   set +x
 }
 
 
@@ -341,31 +343,54 @@ for processed_run_folder in $processed_run_folders; do
       set +x
    fi
 
+
+   function post_make() {
+
+   if [ $DRY_RUN == "yes" ]; then
+      echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
+      echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
+      echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
+      echo "$GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN"
+      echo "Rscript --vanilla  $GBS_BIN/tags_plots.r  run_name=$RUN"
+      echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
+      echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
+      echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
+      echo "$GBS_BIN/database/annotateRun.sh -r $RUN "
+      echo "$GBS_BIN/database/import_hiseq_reads_tags_cv.sh"
+   else
+      psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
+      $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
+      Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
+      $GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN
+      Rscript --vanilla  $GBS_BIN/tags_plots.r run_name=$RUN
+      psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
+      $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
+      $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
+      $GBS_BIN/database/annotateRun.sh -r $RUN
+      $GBS_BIN/database/import_hiseq_reads_tags_cv.sh
+   fi
+
+   # make a precis of the log file for easier reading
+   #make -f gbs_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${processed_run_folder}.logprecis > /dev/null 2>&1
+   # make a summary of the versions of software that were run
+   #make -f gbs_hiseq1.0.mk -i --no-builtin-rules versions.log
+
+   }
+
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
       set -x
       make -n -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
-      echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
-      echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
-      echo "Rscript --vanilla $GBS_BIN/bacterial_contamination_plots.r"
-      echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r"
-      echo "$GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN"
-      echo "Rscript --vanilla  $GBS_BIN/tags_plots.r"
-      echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
-      echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
-      echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
+      post_make
    else
       set -x
       make -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
-      psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
-      $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
-      Rscript --vanilla $GBS_BIN/bacterial_contamination_plots.r
-      Rscript --vanilla $GBS_BIN/taxonomy_clustering.r
-      $GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN
-      Rscript --vanilla  $GBS_BIN/tags_plots.r
-      psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql 
-      $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
-      $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
+      if [ $? == 0 ]; then
+         post_make
+      else
+         echo "(non-zero exit status from make - skipping post_make)"
+         exit 1
+      fi
    fi
 
    # make a precis of the log file for easier reading

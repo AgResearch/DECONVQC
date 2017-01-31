@@ -187,14 +187,45 @@ def main():
 
     (space_iter, space_iter_with_rownames) = get_tax_interval_measure_space(summary_types[options["summary_type"]], all_taxa_distribution_file, run_distribution_files)
 
+    rowname_dict={}
     with open(options["outfile"],"w") as outfile:
-        for interval_measure in space_iter_with_rownames:
-            print >> outfile, re.sub("'|#","","%s\t%s"%("%s_%s"%interval_measure[0], string.join((str(item) for item in interval_measure[1]),"\t")))
 
+        (row_header, column_names) = space_iter_with_rownames.next()
+        # standardise column headers, e.g. 
+        # 161115_D00390_0272_AC9NT3ANXX_Sample_SQ2604_all -> 161115_D00390_0272_AC9NT3ANXX_SQ2604
+        # 161219_D00390_0277_BC9P3HANXX_Goat_all -> 161219_D00390_0277_BC9P3HANXX_Goat
+        # 161216_D00390_0276_AC9PM8ANXX_targeted_Atlantic_Salmon_all
+        new_header_columns = ["%s_%s"%row_header]
+        for column_name in column_names:
+            fields = [field for field in re.split("_", column_name) if re.match("(all|sample|eukaryota|bacteria)", field , re.IGNORECASE) is None]
+            new_name = "%s_%s"%("_".join(fields[0:4]), "-".join(fields[4:]))  
+            new_header_columns.append(new_name)
+        print >> outfile, "\t".join(new_header_columns)
+
+
+        for interval_measure in space_iter_with_rownames:
+            #print >> outfile, re.sub("'|#","","%s\t%s"%("%s_%s"%interval_measure[0], string.join((str(item) for item in interval_measure[1]),"\t")))
+            # need to edit out some rowname characters that R does not like
+            # while not leaving duplicate rows which R also does not like 
+            #record = "%s\t%s"%("%s_%s"%interval_measure[0], string.join((str(item) for item in interval_measure[1]),"\t"))
+            #if re.search("['|#]", record) is not None:
+            #    record = re.sub("'|#", "_%s"%replacement_char, record)
+            #    replacement_char += 1
+            # code now guarantees unique rownames
+            rowname = "%s_%s"%interval_measure[0]
+            rowname = re.sub("'|#", "",rowname)
+            rowname_dict[rowname] = rowname_dict.setdefault(rowname,0) + 1
+            if rowname_dict[rowname] > 1:
+                rowname = "%s_%d"%(rowname, rowname_dict[rowname])
+            record = "%s\t%s"%(rowname, string.join((str(item) for item in interval_measure[1]),"\t"))
+            
+            print >> outfile, record 
+    
     return     
     
 if __name__ == "__main__":
    main()
+   print "*** summarise_global_hiseq_taxonomy.py finished ***"
 
 
 

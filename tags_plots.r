@@ -14,10 +14,38 @@ data_folder="/dataset/hiseq/scratch/postprocessing/"
 output_folder="/dataset/hiseq/scratch/postprocessing/" 
 input_file="all_tag_count_summaries.txt"  
 
+get_command_args <- function() {
+   args=(commandArgs(TRUE))
+   if(length(args)!=1 ){
+      #quit with error message if wrong number of args supplied
+      print('Usage example : Rscript --vanilla  taxonomy_clustering.r run_name=160623_D00390_0257_AC9B0MANXX')
+      print('args received were : ')
+      for (e in args) {
+         print(e)
+      }
+      q()
+   }else{
+      print("Using...")
+      # seperate and parse command-line args
+      for (e in args) {
+         print(e)
+         ta <- strsplit(e,"=",fixed=TRUE)
+         switch(ta[[1]][1],
+            "run_name" = run_name <- ta[[1]][2]
+         )
+      }
+   }
+   return(run_name)
+}
+
+
 
 draw_plots <- function(reads_tags, tag_data, point_labels, number_of_recent_samples) {
+   run_name<-get_command_args()
+
+
    if(reads_tags == "tags" ) {
-      jpeg(filename = "tags_summary.jpg", 1600,1600)
+      jpeg(filename = paste("tags_summary_", run_name, ".jpg",sep=""), 1600,1600)
       par(mfrow=c(2,2))
       smoothScatter(tag_data$mean_tag_count,tag_data$std_tag_count, main="Tag counts by sample:mean,stddev", xlab="Mean", ylab="Standard Deviation", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_tag_count,tag_data$std_tag_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
@@ -44,7 +72,7 @@ draw_plots <- function(reads_tags, tag_data, point_labels, number_of_recent_samp
       text(tag_data$mean_tag_count,tag_data$min_tag_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   
    }
    else if(reads_tags == "reads") {
-      jpeg(filename = "read_summary.jpg", 1600,1600)
+      jpeg(filename = paste("read_summary_", run_name, ".jpg",sep=""), 1600,1600)
       par(mfrow=c(2,2))
       smoothScatter(tag_data$mean_read_count,tag_data$std_read_count, main="Read counts by sample:mean,stddev", xlab="Mean", ylab="Standard Deviation", cex=0.5, cex.lab=1.9, cex.main=1.9)  
       text(tag_data$mean_read_count,tag_data$std_read_count,labels=point_labels, cex=1.2, adj = c( 0, 1 ))                                                   

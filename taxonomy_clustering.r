@@ -1,6 +1,30 @@
 # 
 setwd("/dataset/hiseq/scratch/postprocessing/")
 
+get_command_args <- function() {
+   args=(commandArgs(TRUE))
+   if(length(args)!=1 ){
+      #quit with error message if wrong number of args supplied
+      print('Usage example : Rscript --vanilla  taxonomy_clustering.r run_name=160623_D00390_0257_AC9B0MANXX')
+      print('args received were : ')
+      for (e in args) {
+         print(e)
+      }
+      q()
+   }else{
+      print("Using...")
+      # seperate and parse command-line args
+      for (e in args) {
+         print(e)
+         ta <- strsplit(e,"=",fixed=TRUE)
+         switch(ta[[1]][1],
+            "run_name" = run_name <- ta[[1]][2]
+         )
+      }
+   }
+   return(run_name)
+}
+
 get_clusters <- function(datamatrix) {
    num_clust=20   # all 
    num_clust=20   # euk only
@@ -10,7 +34,7 @@ get_clusters <- function(datamatrix) {
    sample_species_table<-read.table("sample_species.txt", header=TRUE, row.names=1, sep="\t")
    species_config_table<-read.table("species_config.txt", header=TRUE, row.names=1, sep="\t")
    sample_names <- strsplit(rownames(t(datamatrix)), split="_")
-   get_name <- function(split_result) unlist(split_result)[6]
+   get_name <- function(split_result) unlist(split_result)[5]
    sample_names <- sapply(sample_names, get_name) 
 
    # look up the species in the sample-species table , using sample name as key
@@ -47,7 +71,9 @@ get_clusters <- function(datamatrix) {
    return(results)
 }
 
-jpeg(filename = "taxonomy_clustering.jpg", 800, 1600)
+run_name<-get_command_args()
+
+jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 1600)
 par(mfrow=c(2, 1))
 
 

@@ -60,22 +60,7 @@ adapters_file2=/usr/lib64/bcl2fastq-1.8.4/share/bcl2fastq-1.8.4/adapters/TruSeq_
 %.logprecis: %.log
 	echo "bcl2fastq" > $*.logprecis 
 	echo "---------" >> $*.logprecis 
-	egrep "configureBclToFastq" $*.log >> $*.logprecis
-	egrep "^cd " $*.log >> $*.logprecis
-	egrep "^nohup make " $*.log >> $*.logprecis
-	egrep "^find " $*.log >> $*.logprecis
-
-	echo "fastqc" >> $*.logprecis
-	echo "------" >> $*.logprecis
-	egrep "^$(RUN_FASTQC)" $*.log  >> $*.logprecis
-
-	echo "contamination check" >> $*.logprecis
-	echo "-----" >> $*.logprecis
-	egrep "run_sample_contamination_checks.sh" $*.log  >> $*.logprecis
-
-	echo "mapping preview" >> $*.logprecis
-	echo "-----" >> $*.logprecis
-	egrep "run_mapping_preview.sh" $*.log  >> $*.logprecis
+	egrep "bcl2fastq" $*.log >> $*.logprecis
 
 	echo "mkdir" >> $*.logprecis
 	echo "-----" >> $*.logprecis
@@ -88,11 +73,6 @@ adapters_file2=/usr/lib64/bcl2fastq-1.8.4/share/bcl2fastq-1.8.4/adapters/TruSeq_
 	echo "move in_progress to done" >> $*.logprecis
 	echo "------------------------" >> $*.logprecis
 	egrep "^mv " $*.log | grep "in_progress" >> $*.logprecis
-
-	echo "waiting" >> $*.logprecis
-	echo "-------" >> $*.logprecis
-	egrep "^while >> $*.logprecis
-
 
 
 ###############################################
@@ -132,58 +112,20 @@ versions.log:
 %.all: %.processed 
 	echo making $@
 
-%.archived: %.processed
-	# commands to move the results to archive
-
-
 %.processed: %.processed_in_progress
 	# check it all looks right and then 
-	# make the key file
-	# set up any required soft links to sequences to satisfy tassel 
 	mv $< $@
 
-%.processed_in_progress: %.processed_in_progress/mapping_preview  %.processed_in_progress/fastqc_analysis
+%.processed_in_progress: %.processed_in_progress/bcl2fastq
 	echo making $@
-
-%.processed_in_progress/mapping_preview: %.processed_in_progress/mapping_preview_in_progress
-	# check it all looks right and then
-	# temporarily commented out while debugging
-	mv $< $@
-
-%.processed_in_progress/mapping_preview_in_progress: %.processed_in_progress/taxonomy_analysis
-	if [ ! -d $@ ]; then mkdir $@ ; fi
-	#$(RUN_MAPPING_PREVIEW) $(notdir $(*F)) $(machine)
-	$(RUN_MAPPING_PREVIEW) $(run) $@
-
-%.processed_in_progress/taxonomy_analysis: %.processed_in_progress/taxonomy_analysis_in_progress
-	# check it all looks right and then
-	mv $< $@
-
-# the second pattern is used for running this later on
-%.processed_in_progress/taxonomy_analysis_in_progress: %.processed_in_progress/bcl2fastq 
-#%.processed/taxonomy_analysis: %.processed/bcl2fastq 
-	echo making $@
-	if [ ! -d $@ ]; then mkdir $@ ; fi
-	#$(RUN_CONTAMINATION_CHECK) $(notdir $(*F)) $(TARDIS_chunksize) $(SAMPLE_RATE) 
-	$(RUN_CONTAMINATION_CHECK) $(run) $@ $($(machine)) 
-
-%.processed_in_progress/fastqc_analysis: %.processed_in_progress/fastqc_analysis_in_progress
-	# check it all looks right and then
-	mv $< $@
-
-%.processed_in_progress/fastqc_analysis_in_progress: %.processed_in_progress/bcl2fastq
-	if [ ! -d $@ ]; then mkdir $@ ; fi
-	$(RUN_FASTQC) -t 8 -o $@ `cat $</fastq.list`
 
 %.processed_in_progress/bcl2fastq: %.processed_in_progress/bcl2fastq_in_progress
 	# check it all looks right and then
-	find $</*/ -name "*.fastq.gz" | sed 's/bcl2fastq_in_progress/bcl2fastq/g' - > $</fastq.list
 	mv $< $@
 
 %.processed_in_progress/bcl2fastq_in_progress:
-	if [ ! -d $*.processed_in_progress ]; then mkdir $*.processed_in_progress  ; fi
-	if [ ! -d $@ ]; then mkdir $@ ; fi
-	#$(RUN_BCL2FASTQ) -d 8 -p 8 -R $(hiseq_root)/$(*F) --input-dir $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls --output-dir $@ --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv --barcode-mismatches 0 > $*_bcl2fastq.log 2>&1
+	mkdir -p  $@
+	touch $@
 	$(RUN_BCL2FASTQ) -d 8 -p 8  --ignore-missing-bcls --ignore-missing-filter --ignore-missing-positions --ignore-missing-controls --auto-set-to-zero-barcode-mismatches --find-adapters-with-sliding-window --adapter-stringency 0.9 --mask-short-adapter-reads 35 --minimum-trimmed-read-length 35 -R $(hiseq_root)/$(*F)  --sample-sheet $(hiseq_root)/$(*F)/SampleSheet.csv -o $@  -i $(hiseq_root)/$(*F)/Data/Intensities/BaseCalls  > $*_bcl2fastq.log 2>&1
 
 
@@ -191,7 +133,7 @@ versions.log:
 ##############################################
 # specify the intermediate files to keep 
 ##############################################
-.PRECIOUS:  %.processed %.processed_in_progress %.processed_in_progress/taxonomy_analysis %.processed_in_progress/taxonomy_analysis_in_progress %.processed_in_progress/fastqc_analysis %.processed_in_progress/fastqc_analysis_in_progress %.processed_in_progress/bcl2fastq %.processed_in_progress/bcl2fastq %.processed_in_progress/mapping_preview %.processed_in_progress/mapping_preview_in_progress
+.PRECIOUS:  %.processed %.processed_in_progress %.processed_in_progress/bcl2fastq %.processed_in_progress/bcl2fastq_in_progress
 
 ##############################################
 # cleaning - not yet doing this using make  

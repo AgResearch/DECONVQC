@@ -27,6 +27,7 @@ done
 # add this run - we want this run's samples to be last in the file
 runs="$runs $THIS_RUN"
 
+set -x
 for summary in "frequency" "information" ; do
    # summarise all hits
    outfile=$BUILD_ROOT/all_${summary}.txt
@@ -38,6 +39,7 @@ for summary in "frequency" "information" ; do
       $GBS_BIN/summarise_global_hiseq_taxonomy.py -s $kingdom -t $summary  -o $outfile $runs
    done
 done
+set +x
 
 # extract the required sample species table (sample_species.txt)
 cd $BUILD_ROOT
