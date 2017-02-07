@@ -85,7 +85,7 @@ function check_opts() {
 check_file_format() {
    set -x
 
-   # check if file as fastq_link column
+   # check if file has fastq_link column
    fastq_copy_include=""
    head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i fastq_link > /dev/null
    if [ $? == 1 ]; then
@@ -94,7 +94,7 @@ check_file_format() {
       fastq_copy_include=",fastq_link"
    fi
 
-   # check if file as control column
+   # check if file has control column
    control_copy_include=""
    head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i control > /dev/null
    if [ $? == 1 ]; then
@@ -102,6 +102,26 @@ check_file_format() {
    else
       control_copy_include=",control"
    fi
+
+   # check if file has counter column
+   counter_copy_include=""
+   head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i counter > /dev/null
+   if [ $? == 1 ]; then
+      echo "($KEY_DIR/$KEYFILE_BASE.txt does not appear to contain a counter column)"
+   else
+      counter_copy_include=",counter"
+   fi
+
+   # check if file has bifo column
+   bifo_copy_include=""
+   head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i bifo > /dev/null
+   if [ $? == 1 ]; then
+      echo "($KEY_DIR/$KEYFILE_BASE.txt does not appear to contain a bifo column)"
+   else
+      bifo_copy_include=",bifo"
+   fi
+
+
 
 }
 
@@ -150,7 +170,7 @@ cat $KEY_DIR/$KEYFILE_BASE.txt | iconv -c -t UTF8 | $GBS_BIN/database/sanitiseKe
 echo "
 delete from keyfile_temp;
 
-\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID,Counter,Comment,Enzyme,Species,NumberOfBarcodes,Bifo${control_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
+\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
 insert into gbsKeyFileFact (
    biosampleob,
    Flowcell,

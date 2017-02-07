@@ -16,7 +16,7 @@
 */
 \t
 select distinct 
-   :processed_root || '/bcl2fastq/' || sampleproject || '/' || upper(:sample) || E'_S[0123456789]+_L[0123456789]+_R1_[0123456789]+\.fastq\.gz'
+   :processed_root || '/bcl2fastq/' || sampleproject || '/' || upper(:sample) || E'_(S[0123456789]+|NoIndex)_L[0123456789]+_R1_[0123456789]+\.fastq\.gz'
 from 
    (((biosamplelist as l join biosamplelistmembershiplink m on 
    m.biosamplelist = l.obid)  join biosampleob as b on 
