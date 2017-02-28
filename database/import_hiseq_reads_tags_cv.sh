@@ -29,11 +29,11 @@ done
 }
 
 function import_data() {
-psql -U agrbrdf -d agrbrdf -h invincible -f import_hiseq_reads_tags_cv.psql
+psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/import_hiseq_reads_tags_cv.psql
 }
 
 function update_data() {
-psql -U agrbrdf -d agrbrdf -h invincible -f update_hiseq_reads_tags_cv.psql 
+psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/update_hiseq_reads_tags_cv.psql 
 }
 
 collate_data

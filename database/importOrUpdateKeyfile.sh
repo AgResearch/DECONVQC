@@ -114,6 +114,16 @@ check_file_format() {
    else
       bifo_copy_include=",bifo"
    fi
+
+   # check if file has windowsizecolumn
+   windowsize_copy_include=""
+   head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i windowsize > /dev/null
+   if [ $? == 1 ]; then
+      echo "($KEY_DIR/$KEYFILE_BASE.txt does not appear to contain a windowsize column)"
+   else
+      windowsize_copy_include=",windowsize"
+   fi
+
 }
 
 
@@ -163,7 +173,7 @@ if [ $ACTION == "insert" ]; then
 echo "
 delete from keyfile_temp;
 
-\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
+\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${windowsize_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
 insert into gbsKeyFileFact (
    biosampleob,
    Flowcell,
@@ -181,6 +191,7 @@ insert into gbsKeyFileFact (
    NumberOfBarcodes,
    Bifo,
    control,
+   windowsize,
    fastq_link 
    )
 select
@@ -200,6 +211,7 @@ select
    NumberOfBarcodes,
    Bifo,
    control,
+   windowsize,
    fastq_link
 from
    biosampleob as s join keyfile_temp as t on
@@ -235,7 +247,7 @@ elif [ $ACTION == "update" ]; then
 echo "
 delete from keyfile_temp;
 
-\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
+\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${windowsize_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
 insert into gbsKeyFileFact (
    biosampleob,
    Flowcell,
@@ -253,6 +265,7 @@ insert into gbsKeyFileFact (
    NumberOfBarcodes,
    Bifo,
    control,
+   windowsize,
    fastq_link
    )
 select
@@ -272,6 +285,7 @@ select
    NumberOfBarcodes,
    Bifo,
    control,
+   windowsize,
    fastq_link
 from
    biosampleob as s join keyfile_temp as t on

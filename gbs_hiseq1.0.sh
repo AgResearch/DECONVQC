@@ -192,7 +192,9 @@ function get_samples() {
 
 
 function update_database() {
+   processed_folder=$1
    add_run
+   get_samples $processed_folder $RUN_ROOT
    import_keyfiles
    update_fastq_locations
    # no longer do this
@@ -244,8 +246,7 @@ function update_fastq_locations() {
             $GBS_BIN/database/updateFastqLocations.sh -n -s $sample_moniker -k $sample_moniker -r $RUN -f $flowcell_moniker -l $flowcell_lane 
          fi
          if [ $? != "0" ]; then
-            echo "updateFastqLocations.sh  exited with $? - quitting"
-            exit 1
+            echo "error !! updateFastqLocations.sh  exited with $? for $sample_moniker - continuing to attempt other samples "
          fi
       done
    done
@@ -316,16 +317,20 @@ for processed_run_folder in $processed_run_folders; do
    RUN_ROOT=${BUILD_ROOT}/${run}.gbs_in_progress
 
    # get the samples to process - will build a list in the variable sample_targets
-   get_samples $processed_run_folder $RUN_ROOT 
+   # moved into update_database method now that this works from database
+   # - i.e. need to run after addRun
+   #get_samples $processed_run_folder $RUN_ROOT 
 
    # if requested, update the database - i.e. import run and keyfiles 
    if [[ ( $TASK == "uneak_and_db_update" ) || ( $TASK == "db_update" ) ]]; then 
-      update_database
+      update_database $processed_run_folder
    fi
   
    if [ $TASK == "db_update" ] ; then
       exit 0
    fi
+
+   get_samples $processed_run_folder $RUN_ROOT
 
    # get the parameters that control the Q/C run - e.g.
    # reference genomes , blast database to use etc
