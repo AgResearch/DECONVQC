@@ -19,8 +19,9 @@ TASK=uneak
 RUN=all
 MACHINE=hiseq
 SAMPLE=""
+ENZYME=""
 
-while getopts ":niht:r:m:s:" opt; do
+while getopts ":niht:r:m:s:e:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
@@ -33,6 +34,9 @@ while getopts ":niht:r:m:s:" opt; do
       ;;
     m)
       MACHINE=$OPTARG
+      ;;
+    e)
+      ENZYME=$OPTARG
       ;;
     r)
       RUN=$OPTARG
@@ -367,7 +371,8 @@ for processed_run_folder in $processed_run_folders; do
          done
          echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
          echo "$GBS_BIN/database/annotateRun.sh -r $RUN "
-         echo "$GBS_BIN/database/import_hiseq_reads_tags_cv.sh"
+         echo "$GBS_BIN/database/import_hiseq_reads_tags_cv.sh -r $RUN"
+         echo "$GBS_BIN/database/import_kgd_stats.sh -r $RUN"
       else
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
          $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
@@ -381,7 +386,8 @@ for processed_run_folder in $processed_run_folders; do
          done
          $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
          $GBS_BIN/database/annotateRun.sh -r $RUN
-         $GBS_BIN/database/import_hiseq_reads_tags_cv.sh
+         $GBS_BIN/database/import_hiseq_reads_tags_cv.sh -r $RUN
+         $GBS_BIN/database/import_kgd_stats.sh -r $RUN
       fi
 
       # make a precis of the log file for easier reading

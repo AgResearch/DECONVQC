@@ -13,6 +13,15 @@ module load samtools
 
 RUN=$1
 WORKING_FOLDER=$2
+DRY_RUN=$3
+
+if [ -z "$DRY_RUN" ]; then
+   DRY_RUN="no"
+elif [[ $DRY_RUN == "y" || $DRY_RUN == "Y" || $DRY_RUN == "yes" ]]; then
+   DRY_RUN="yes"
+else
+   DRY_RUN="no"
+fi
 
 BCL2FASTQ_FOLDER=${WORKING_FOLDER}/../bcl2fastq/
 TAX_FOLDER=${WORKING_FOLDER}/../taxonomy_analysis
@@ -61,7 +70,12 @@ for sample_trimmed_file in $TAX_FOLDER/*.fastq.trimmed.gz; do
          echo "queuing $sample_trimmed_file"
          REF_GENOME_MONIKER=`basename $REF_GENOME`
          set -x
-         nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  &
+         if [ $DRY_RUN == "yes" ]; then
+            echo "*** dry run only ***"
+            echo "nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & "
+         else 
+            nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & 
+         fi
          set +x
       fi
    else
@@ -75,7 +89,7 @@ for sample_trimmed_file in $TAX_FOLDER/*.fastq.trimmed.gz; do
    batonfile=${WORKING_FOLDER}/${sample_name}.bwa.baton
    sample_trimmed_moniker=${sample_name}.sample.fastq.trimmed
    REF_GENOME=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
-   if [ ! -z $REF_GENOME ]; then
+   if [[ ( ! -z $REF_GENOME )  &&  ( $DRY_RUN == "no" ) ]]; then
       REF_GENOME_MONIKER=`basename $REF_GENOME`
       echo "waiting for $batonfile"
       while [ ! -f $batonfile ]; do  
@@ -83,9 +97,18 @@ for sample_trimmed_file in $TAX_FOLDER/*.fastq.trimmed.gz; do
       done
    fi
    # summarise the alignment  
+   if [ $DRY_RUN == "yes" ]; then 
+      echo "
    rm -f $batonfile
    if [ -f $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then
       bamtools stats -in $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam > $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.stats 
+   fi
+   "
+   else
+      rm -f $batonfile
+      if [ -f $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then
+         bamtools stats -in $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam > $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.stats
+      fi
    fi
 done
 

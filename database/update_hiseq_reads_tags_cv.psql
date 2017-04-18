@@ -15,6 +15,7 @@ from
    ltrim(rtrim(to_char(g.libraryprepid,'999999'))) = t.sqnumber and
    g.sample = t.sampleid ) join biosamplelist as b on 
    b.listname = t.run
+   and t.run = :run_name
 where not exists (
    select sampleid from  gbsYieldFact where
    sampleid = g.sample and 

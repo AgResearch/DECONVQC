@@ -4,7 +4,8 @@ First update - this handles animal samples
 update gbs_yield_import_temp
 set 
    sampleid = split_part(seqid,'_',1),
-   matched = 0;
+   matched = 0, 
+   flowcell = substr(split_part(run, '_',4), 2);
 
 
 update gbs_yield_import_temp as u
@@ -15,12 +16,14 @@ from
    gbs_yield_import_temp as t on 
    g.sampleid = t.sampleid and 
    g.sqname = t.sqname and
-   t.run = l.listname
+   t.run = l.listname and
+   t.flowcell = g.flowcell
 where 
    u.sampleid =g.sampleid and 
    u.run = l.listname and 
    u.sqname = g.sqname and 
-   u.run = :run_name;
+   u.run = :run_name and
+   u.flowcell = g.flowcell;
 
 
 update gbsyieldfact  as u
@@ -33,20 +36,11 @@ from
    gbs_yield_import_temp as t on
    g.sampleid = t.sampleid and
    g.sqname = t.sqname and
-   t.run = l.listname
+   t.run = l.listname and
+   t.flowcell = g.flowcell
 where
    u.sampleid =t.sampleid and
    u.biosamplelist = l.obid and
    u.sqname = t.sqname and 
-   t.matched = 1;
-
-
-
-   
-
-
-
-
-
-
-
+   u.flowcell = t.flowcell and
+   t.matched = 1 ;

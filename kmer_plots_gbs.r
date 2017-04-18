@@ -358,6 +358,7 @@ draw_distances_plot <- function(datalist, output_folder, distances_plot_image_fi
    col_labels[col_label_selector] = colnames(datalist$entropy_data)[col_label_selector]
 
    text(fit$points, labels = col_labels, pos = 4, cex=0.8)
+   write.table(fit$points, "zipfian_distances_fit.txt", sep="\t")
    dev.off()
 }
 

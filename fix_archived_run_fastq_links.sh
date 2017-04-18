@@ -83,6 +83,8 @@ function fix_links() {
       new_target=`find $ARCHIVE_ROOT/$RUN -name $base -print`
       if [ -z "$new_target" ]; then
          echo "ERROR - could not find $base under $ARCHIVE_ROOT/$RUN"
+      elif [ ! -s $new_target ]; then
+         echo "!! ERROR - the target file $new_target is not a non-zero-length file  !!"
       else  
          echo "
          ===>relinking $seqlink to $new_target
