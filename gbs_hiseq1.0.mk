@@ -33,6 +33,7 @@ GET_READS_TAGS_PER_SAMPLE=$(GBS_BIN)/get_reads_tags_per_sample.py
 # variables for tardis and other apps
 machine=hiseq
 parameters_file=
+run_temp=
 
 
 #*****************************************************************************************
@@ -155,75 +156,77 @@ versions.log:
 	mv $< $@
 	touch $@
 
-# (uneak_in_progress no longer depends on blast analysis as blast analysis 
-# is slow , so we will usually do that later - to include blast analysis as a dependency ,
-# the dependency list woudl be : 
-# uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg   %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg
-#%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
-#now do these other analyses later
-%.sample_in_progress/uneak_in_progress:  %.sample_in_progress/uneak_in_progress/KGD
-	# check it looks ok
+.SECONDEXPANSION:
+%.sample_in_progress/uneak_in_progress:  $$(addprefix $$@/, $$(notdir $$(addsuffix .enzyme , $$(wildcard $(run_temp)/$$(*F)/uneak_enzymes/* ))))
+	# running merge of enzyme-specific results
+	echo "running merge of $+ to obtain $@"
+
+
+%.enzyme:  %.enzyme/KGD
+#	# check it looks ok
 	echo "checking $@"
 
 
 # The target here supports running the blast analysis later on as a seperate run after the main gbs analysis is finished
-%.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg :  %.processed_sample/uneak/KGD
-	mkdir -p $(dir $@)
-	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $</../tagCounts/ -O $(dir $@) 1>$(dir $@)/blast.stdout 2>$(dir $@)/blast.stderr
-	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $(dir $@) 1>$(dir $@)/summary.stdout 2>$(dir $@)/summary.stderr
-	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla $(GBS_BIN)/blast_summary_heatmap.r datafolder=$(dir $@)
+%.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg:  
+	mkdir -p $(@D)
+	$(GBS_BIN)/utils/blast_analyse_samples.sh -D $(@D)/../tagCounts/ -O $(@D) 1>$(@D)/blast.stdout 2>$(@D)/blast.stderr
+	$(GBS_BIN)/utils/blast_analyse_samples.sh -T summarise -O $(@D) 1>$(@D)/summary.stdout 2>$(@D)/summary.stderr
+	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla $(GBS_BIN)/blast_summary_heatmap.r datafolder=$(@D)
 
-%.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg:  %.sample_in_progress/uneak_in_progress/KGD
-	mkdir -p $(dir $@)
-	$(GBS_BIN)/kmer_entropy.py -b $(dir $@) -t zipfian -k 6 -p 1 -o $(dir $@)/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt 1>$(dir $@)/zipfian.stdout 2>$(dir $@)/zipfian.stderr
-	$(GBS_BIN)/kmer_entropy.py -b $(dir $@) -t frequency -k 6 -p 1 -o $(dir $@)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $</../tagCounts/*.cnt 1>$(dir $@)/frequency.stdout 2>$(dir $@)/frequency.stderr
-	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $(GBS_BIN)/kmer_plots_gbs.r datafolder=$(dir $@) 1>$(dir $@)/plots.stdout 2>$(dir $@)/plots.stderr
+# The target here supports running the kmer analysis later on as a seperate run after the main gbs analysis is finished
+%.processed_sample/uneak/kmer_analysis/zipfian_distances.jpg:  
+	mkdir -p $(@D)
+	$(GBS_BIN)/kmer_entropy.py -b $(@D) -t zipfian -k 6 -p 1 -o $(@D)/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/zipfian.stdout 2>$(@D)/zipfian.stderr
+	$(GBS_BIN)/kmer_entropy.py -b $(@D) -t frequency -k 6 -p 1 -o $(@D)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/frequency.stdout 2>$(@D)/frequency.stderr
+	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $(GBS_BIN)/kmer_plots_gbs.r datafolder=$(@D) 1>$(@D)/plots.stdout 2>$(@D)/plots.stderr
 
-%.sample_in_progress/uneak_in_progress/KGD: %.sample_in_progress/uneak_in_progress/hapMap
+%.enzyme/KGD: %.enzyme/hapMap
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/run_kgd.sh $@ 
 
-%.sample_in_progress/uneak_in_progress/hapMap: %.sample_in_progress/uneak_in_progress/mapInfo
+%.enzyme/hapMap: %.enzyme/mapInfo
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UMapInfoToHapMapPlugin -w ./ -mnMAF 0.03 -mxMAF 0.5 -mnC 0.1 -endPlugin -runfork1 > UMapInfoToHapMap.out 2> UMapInfoToHapMap.se
 
-%.sample_in_progress/uneak_in_progress/mapInfo: %.sample_in_progress/uneak_in_progress/tagsByTaxa
+%.enzyme/mapInfo: %.enzyme/tagsByTaxa
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTBTToMapInfoPlugin -w ./ -endPlugin -runfork1 > UTBTToMapInfo.out 2> UTBTToMapInfo.se 
 
-%.sample_in_progress/uneak_in_progress/tagsByTaxa: %.sample_in_progress/uneak_in_progress/tagPair
+%.enzyme/tagsByTaxa: %.enzyme/tagPair
+
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTagPairToTBTPlugin -w ./ -endPlugin -runfork1 > UTagPairToTBT.out 2> UTagPairToTBT.se 
 
-%.sample_in_progress/uneak_in_progress/tagPair: %.sample_in_progress/uneak_in_progress/mergedTagCounts
+%.enzyme/tagPair: %.enzyme/mergedTagCounts
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTagCountToTagPairPlugin -w ./ -e 0.03 -endPlugin -runfork1 > UTagCountToTagPair.out 2> UTagCountToTagPair.se 
 
-%.sample_in_progress/uneak_in_progress/mergedTagCounts: %.sample_in_progress/uneak_in_progress/tagCounts
+%.enzyme/mergedTagCounts: %.enzyme/tagCounts
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UMergeTaxaTagCountPlugin -w ./ -m 600000000 -x 100000000 -c 5 -endPlugin -runfork1 > UMergeTaxaTagCount.out 2> UMergeTaxaTagCount.se 
 
-%.sample_in_progress/uneak_in_progress/tagCounts: %.sample_in_progress/uneak_in_progress/Illumina  %.sample_in_progress/uneak_in_progress/key
+%.enzyme/tagCounts: %.enzyme/Illumina  %.enzyme/key
 	mkdir -p $@
 	touch $@
-	enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; echo "making UFastqToTagCount using enzyme $$enzyme"
-	cd $@/..; enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $$enzyme -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
-	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e PstI -s 300000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
-	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e ApeKI -s 300000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
+	#enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; echo "making UFastqToTagCount using enzyme $$enzyme"
+	#cd $@/..; enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $$enzyme -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
+	echo "making UFastqToTagCount using enzyme $(*F)"
+	cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $(*F) -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; $(GBS_BIN)/get_reads_tags_per_sample.py  
 
-%.sample_in_progress/uneak_in_progress/Illumina: 
+%.enzyme/Illumina: 
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/link_fastq_files.sh $@
 
-%.sample_in_progress/uneak_in_progress/key: 
+%.enzyme/key: 
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/link_key_files.sh $@
@@ -232,7 +235,7 @@ versions.log:
 ##############################################
 # specify the intermediate files to keep 
 ##############################################
-.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.sample_in_progress/uneak_in_progress/kmer_analysis %.sample_in_progress/uneak_in_progress/blast_analysis %.processed_sample/uneak/blast_analysis %.sample_in_progress/uneak_in_progress/KGD %.sample_in_progress/uneak_in_progress/hapMap %.sample_in_progress/uneak_in_progress/mapInfo %.sample_in_progress/uneak_in_progress/tagsByTaxa %.sample_in_progress/uneak_in_progress/tagPair %.sample_in_progress/uneak_in_progress/mergedTagCounts %.sample_in_progress/uneak_in_progress/tagCounts %.sample_in_progress/uneak_in_progress/Illumina %.sample_in_progress/uneak_in_progress/key %.sample_in_progress/uneak_in_progress/blast_analysis/sample_blast_summary.jpg %.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.sample_in_progress/uneak_in_progress/kmer_analysis/zipfian_distances.jpg
+.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.enzyme/kmer_analysis %.enzyme/blast_analysis %.processed_sample/uneak/blast_analysis %.enzyme/KGD %.enzyme/hapMap %.enzyme/mapInfo %.enzyme/tagsByTaxa %.enzyme/tagPair %.enzyme/mergedTagCounts %.enzyme/tagCounts %.enzyme/Illumina %.enzyme/key %.enzyme/blast_analysis/sample_blast_summary.jpg %.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.enzyme/kmer_analysis/zipfian_distances.jpg
 
 ##############################################
 # cleaning - not yet doing this using make  

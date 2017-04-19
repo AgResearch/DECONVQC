@@ -66,9 +66,7 @@ def get_enzyme(library_name, run_name):
     if proc.returncode != 0:
         raise Exception("Unable to get enzyme count from %s - call returned an error"%str(enzyme_query))    
     if stdout.strip() not in ["0","1"]:
-        print "Warning - found %s enzymes for library %s, run %s  - note for example cannot extract and process a single keyfile for this entire library"%(stdout.strip(), library_name, run_name)
-        print "Attempting to get a single enzyme for this flowcell"
-        # parse the run to obtain flowcell id - e.g. from 161118_D00390_0273_BC9NB4ANXX obtain C9NB4ANXX
+        # try including flowcell in the query 
         run_tokens = re.split("_", run_name)
         if len(run_tokens) != 4:
             raise Exception("Unable to parse flowcell id from %s"%run_name)
@@ -78,8 +76,9 @@ def get_enzyme(library_name, run_name):
         (stdout, stderr) = proc.communicate()
         if proc.returncode != 0:
             raise Exception("Unable to get enzyme count from %s - call returned an error"%str(enzyme_query))
-        if stdout.strip() not in ["0","1"]:
-            raise Exception("Error - found %s enzymes for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
+        #if stdout.strip() not in ["0","1"]:
+        #    #raise Exception("Error - found %s enzymes for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
+        #    raise Exception("Error - found %s enzymes for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
     if stdout.strip() == "0":
         return "undefined"
 
@@ -98,7 +97,8 @@ def get_enzyme(library_name, run_name):
         raise Exception("Unable to get a valid looking enzyme from %s - called returned <%s>"%(str(enzyme_query), stdout.strip()))
     #print "DEBUG - got %s"%stdout.strip()
  
-    return stdout.strip()
+    #return stdout.strip()
+    return " ".join( [ item.strip() for item in re.split("\n",stdout.strip()) ] )
 
  
 def get_json(options):
