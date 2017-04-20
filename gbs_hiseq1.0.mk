@@ -160,6 +160,7 @@ versions.log:
 %.sample_in_progress/uneak_in_progress:  $$(addprefix $$@/, $$(notdir $$(addsuffix .enzyme , $$(wildcard $(run_temp)/$$(*F)/uneak_enzymes/* ))))
 	# running merge of enzyme-specific results
 	echo "running merge of $+ to obtain $@"
+	$(GBS_BIN)/merge_enzymes.sh  $@ $+
 
 
 %.enzyme:  %.enzyme/KGD

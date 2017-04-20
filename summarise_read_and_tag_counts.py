@@ -35,8 +35,8 @@ first record is :
 
 
 
-    tuple_stream = itertools.ifilter( lambda record: not ((record[0].lower() in ("total","good")) or ( re.search("blank|gbsneg|negative", record[0], re.IGNORECASE) is not None )), tuple_stream)
-    exclusions_stream = itertools.ifilter(lambda record: ((record[0].lower() in ("total","good")) or ( re.search("blank|gbsneg|negative", record[0], re.IGNORECASE) is not None )), exclusions_stream)
+    tuple_stream = itertools.ifilter( lambda record: not ((record[0].lower() in ("total","good","sample")) or ( re.search("blank|gbsneg|negative", record[0], re.IGNORECASE) is not None )), tuple_stream)
+    exclusions_stream = itertools.ifilter(lambda record: ((record[0].lower() in ("total","good","sample")) or ( re.search("blank|gbsneg|negative", record[0], re.IGNORECASE) is not None )), exclusions_stream)
     
                                         
     excluded = list(exclusions_stream)
