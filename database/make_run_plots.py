@@ -311,7 +311,7 @@ def generate_run_plot(options):
                 </font></h4>"""%samples[0]
                                     for relname in relnames:
                                         print >> out_stream,"""
-                <a href=""" + relname + """>""" + os.path.basename(relname)+ """ </a>
+                <a href=""" + relname + """ target=new >""" + os.path.basename(relname)+ """ </a>
                 """%samples[0]
                         print >> out_stream,"</td>"
                     print >> out_stream,"</tr>"

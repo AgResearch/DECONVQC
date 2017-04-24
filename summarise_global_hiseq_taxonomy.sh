@@ -28,15 +28,20 @@ done
 runs="$runs $THIS_RUN"
 
 set -x
+
 for summary in "frequency" "information" ; do
    # summarise all hits
    outfile=$BUILD_ROOT/all_${summary}.txt
    $GBS_BIN/summarise_global_hiseq_taxonomy.py -t $summary  -o $outfile $runs
+   outfile=$BUILD_ROOT/all_${summary}_xnohit.txt
+   $GBS_BIN/summarise_global_hiseq_taxonomy.py -t $summary  -o $outfile -x nohit $runs  # excluding no hits 
 
-   # make kingdom-specific files as well 
+   # make kingdom-specific files as well
    for kingdom in "eukaryota" "bacteria"; do
       outfile=$BUILD_ROOT/${kingdom}_${summary}.txt
       $GBS_BIN/summarise_global_hiseq_taxonomy.py -s $kingdom -t $summary  -o $outfile $runs
+      outfile=$BUILD_ROOT/${kingdom}_${summary}_xnohit.txt
+      $GBS_BIN/summarise_global_hiseq_taxonomy.py -s $kingdom -t $summary  -o $outfile -x nohit $runs  # excluding no hits 
    done
 done
 set +x

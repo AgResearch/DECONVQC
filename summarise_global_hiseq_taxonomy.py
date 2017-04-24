@@ -18,7 +18,7 @@ def my_weight_value_provider(raw_value, *xargs):
     return weight_value
 
 
-def build_run_tax_distributions(run_name, tax_pattern = None, name_infix=""):
+def build_run_tax_distributions(run_name, tax_pattern = None, name_infix="", exclusions = None):
     """
      the input tax table looks like  :
 
@@ -48,20 +48,20 @@ Bacteria        Acinetobacter baumannii 0       0       0       0       0       
     
     for sample_name in sample_names:
         #print "processing %s"%sample_name
-        saved_file = build_sample_tax_distribution(run_taxtable_file,run_name,sample_name,tax_pattern,name_infix)
+        saved_file = build_sample_tax_distribution(run_taxtable_file,run_name,sample_name,tax_pattern,name_infix, exclusions)
         #use_prbdf(saved_file)
         saved_files.append(saved_file)
 
     return saved_files
 
 
-def build_sample_tax_distribution(datafile, run_name, sample_name, tax_pattern = None, name_infix=""):
+def build_sample_tax_distribution(datafile, run_name, sample_name, tax_pattern = None, name_infix="", exclusions = None):
     """
     each record - i.e. taxa - is a bin. Build a distribution of reads across
     these bins, for each sample in a run. This is already provided by the summary files - we just collate
     all summary files and store it our own sparse prbdf structure
 
-    (tax_pattern and name_infix are there for selecting out sub-sets of taxa)
+    (tax_pattern and name_infix are there for selecting out and naming sub-sets of taxa)
     """
     global RUN_ROOT, BUILD_ROOT
     
@@ -71,10 +71,19 @@ def build_sample_tax_distribution(datafile, run_name, sample_name, tax_pattern =
     data_stream = from_tab_delimited_file(datafile)
     header  = data_stream.next()
     sample_index = header.index(sample_name)
-    if tax_pattern is None:
-        data_stream = ((record[0],record[1],record[sample_index]) for record in data_stream if float(record[sample_index]) > 0) # taxname, count
+    if exclusions is None:
+        if tax_pattern is None:
+            data_stream = ((record[0],record[1],record[sample_index]) for record in data_stream if float(record[sample_index]) > 0) # taxname, count
+        else:
+            data_stream = ((record[0],record[1],record[sample_index]) for record in data_stream if float(record[sample_index]) > 0 and re.search(tax_pattern, record[0], re.IGNORECASE) is not None) # taxname, count
+    elif exclusions == "nohit":
+        if tax_pattern is None:
+            data_stream = ((record[0],record[1],record[sample_index]) for record in data_stream if float(record[sample_index]) > 0 and re.search("no\s*hit", record[0], re.IGNORECASE) is None) 
+        else:
+            data_stream = ((record[0],record[1],record[sample_index]) for record in data_stream if float(record[sample_index]) > 0 and re.search(tax_pattern, record[0], re.IGNORECASE) is not None and re.search("no\s*hit", record[0], re.IGNORECASE) is None) # taxname, count
     else:
-        data_stream = ((record[0],record[1],record[sample_index]) for record in data_stream if float(record[sample_index]) > 0 and re.search(tax_pattern, record[0], re.IGNORECASE) is not None) # taxname, count
+        raise Exception("unsupported exclusions spec %s"%exclusions)
+    
 
     distob = Distribution(None, 1, [data_stream]) 
 
@@ -155,12 +164,26 @@ python hiseq_taxonomy.py -t information 150619_D00390_0230_AC6JPUANXX 150612_D00
     parser = argparse.ArgumentParser(description=description, epilog=long_description, formatter_class = argparse.RawDescriptionHelpFormatter)
     parser.add_argument('run_names', type=str, nargs='*',help='list of runs to include')
     parser.add_argument('-t', '--summary_type' , dest='summary_type', default="frequency", choices=["frequency", "information"],help="type of summary")    
-    parser.add_argument('-s', '--subset' , dest='subset', default="all", choices=["eukaryota", "bacteria", "all"],help="subset to summarise")    
+    parser.add_argument('-s', '--subset' , dest='subset', default="all", choices=["eukaryota", "bacteria", "all"],help="subset to summarise")
+    parser.add_argument('-x', '--exclusions' , dest='exclusions', default=None, choices=["nohit"],help="exclusions")        
     parser.add_argument('-o', '--outfile' , dest='outfile', default="tax.out", required=True,help="name of output file")    
     
     args = vars(parser.parse_args())
 
     return args
+
+
+def get_infix(options):
+    """
+get an infix that is used to name the distribution files. Its made by
+hashing together the subset and exclusions options
+    """
+    infix  = options["subset"]
+    if options["exclusions"] == "nohit":
+        infix = "%(subset)s-xnohit"%options
+    return infix
+        
+        
 
 
 
@@ -180,10 +203,10 @@ def main():
     options = get_options()
     run_distribution_files = []
     for run in options["run_names"]:
-        run_distribution_files += build_run_tax_distributions(run,tax_pattern = subsets[options["subset"]], name_infix=options["subset"])
+        run_distribution_files += build_run_tax_distributions(run,tax_pattern = subsets[options["subset"]], name_infix=get_infix(options), exclusions = options["exclusions"])
     #print run_distribution_files
 
-    all_taxa_distribution_file = get_all_tax_intervals(run_distribution_files, name_infix = options["subset"])
+    all_taxa_distribution_file = get_all_tax_intervals(run_distribution_files, name_infix = get_infix(options))
 
     (space_iter, space_iter_with_rownames) = get_tax_interval_measure_space(summary_types[options["summary_type"]], all_taxa_distribution_file, run_distribution_files)
 
@@ -197,7 +220,7 @@ def main():
         # 161216_D00390_0276_AC9PM8ANXX_targeted_Atlantic_Salmon_all
         new_header_columns = ["%s_%s"%row_header]
         for column_name in column_names:
-            fields = [field for field in re.split("_", column_name) if re.match("(all|sample|eukaryota|bacteria)", field , re.IGNORECASE) is None]
+            fields = [field for field in re.split("_", column_name) if re.match("(all|sample|eukaryota|bacteria|all-xnohit)", field , re.IGNORECASE) is None]
             new_name = "%s_%s"%("_".join(fields[0:4]), "-".join(fields[4:]))  
             new_header_columns.append(new_name)
         print >> outfile, "\t".join(new_header_columns)

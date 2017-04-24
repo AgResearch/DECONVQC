@@ -73,25 +73,34 @@ get_clusters <- function(datamatrix) {
 
 run_name<-get_command_args()
 
-jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 1600)
-par(mfrow=c(2, 1))
+jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 2400)
+par(mfrow=c(3, 1))
 
 
 datamatrix<-read.table("eukaryota_information.txt", header=TRUE, row.names=1, sep="\t")
 clusters=get_clusters(datamatrix)
 plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
 clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
-title("Clustering of Blast Eukaryota-Hit Profiles")
-text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=0.8)
+title("Clustering of Blast Eukaryota-Hit Profiles", cex.main=1.5)
+text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
+write.table(clusters$fit$points,file=paste("Clustering-of-Blast-Eukaryota-Hit-Profiles-",run_name,".txt",sep=""),row.names=TRUE,sep="\t")
 
 
 datamatrix<-read.table("all_information.txt", header=TRUE, row.names=1, sep="\t")
 clusters=get_clusters(datamatrix)
 plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
 clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
-title("Clustering of Blast All-Hit Profiles")
-title("Clustering of Blast All-Hit Profiles")
-text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=0.8)
+title("Clustering of Blast All-Hit Profiles", cex.main=1.5)
+text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
+write.table(clusters$fit$points,file=paste("Clustering-of-Blast-All-Hit-Profiles-",run_name,".txt",sep=""),row.names=TRUE,sep="\t")
+
+datamatrix<-read.table("all_information_xnohit.txt", header=TRUE, row.names=1, sep="\t")
+clusters=get_clusters(datamatrix)
+plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
+clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
+title("Clustering of Blast All-Hit Profiles (Excluding 'no hit')", cex.main=1.5)
+text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
+write.table(clusters$fit$points,file=paste("Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-",run_name,".txt",sep=""),row.names=TRUE,sep="\t")
 
 dev.off()
 
