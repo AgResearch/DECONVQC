@@ -124,6 +124,16 @@ check_file_format() {
       windowsize_copy_include=",windowsize"
    fi
 
+   # check if file has gbs_cohort column
+   gbscohort_copy_include=""
+   head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i gbs_cohort > /dev/null
+   if [ $? == 1 ]; then
+      echo "($KEY_DIR/$KEYFILE_BASE.txt does not appear to contain a gbs_cohort column)"
+   else
+      gbscohort_copy_include=",gbs_cohort"
+   fi
+
+
 }
 
 
@@ -173,7 +183,11 @@ if [ $ACTION == "insert" ]; then
 echo "
 delete from keyfile_temp;
 
-\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${windowsize_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
+\copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${windowsize_copy_include}$gbscohort_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
+
+update keyfile_temp set gbs_cohort = enzyme where gbs_cohort is null;
+update keyfile_temp set gbs_cohort = enzyme where length(ltrim(rtrim(gbs_cohort))) = 0;
+
 insert into gbsKeyFileFact (
    biosampleob,
    Flowcell,
@@ -192,6 +206,7 @@ insert into gbsKeyFileFact (
    Bifo,
    control,
    windowsize,
+   gbs_cohort,
    fastq_link 
    )
 select
@@ -212,12 +227,14 @@ select
    Bifo,
    control,
    windowsize,
+   gbs_cohort,
    fastq_link
 from
    biosampleob as s join keyfile_temp as t on
    s.samplename = :samplename and
    s.sampletype = 'Illumina GBS Library';
 " > /tmp/$KEYFILE_BASE.psql
+
 
 # these next updates add an audit-trail of the import 
 echo "
@@ -248,6 +265,10 @@ echo "
 delete from keyfile_temp;
 
 \copy keyfile_temp(Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID${counter_copy_include},Comment,Enzyme,Species,NumberOfBarcodes${bifo_copy_include}${control_copy_include}${windowsize_copy_include}${fastq_copy_include}) from /tmp/$KEYFILE_BASE.txt with NULL as ''
+
+update keyfile_temp set gbs_cohort = enzyme where gbs_cohort is null;
+update keyfile_temp set gbs_cohort = enzyme where length(ltrim(rtrim(gbs_cohort))) = 0;
+
 insert into gbsKeyFileFact (
    biosampleob,
    Flowcell,
@@ -266,6 +287,7 @@ insert into gbsKeyFileFact (
    Bifo,
    control,
    windowsize,
+   gbs_cohort,
    fastq_link
    )
 select
@@ -286,6 +308,7 @@ select
    Bifo,
    control,
    windowsize,
+   gbs_cohort,
    fastq_link
 from
    biosampleob as s join keyfile_temp as t on

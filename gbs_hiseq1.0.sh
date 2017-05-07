@@ -10,6 +10,7 @@ help_text="
  examples : \n
  ./gbs_hiseq1.0.sh -i -n -r 150925_D00390_0235_BC6K0YANXX\n
  ./gbs_hiseq1.0.sh -i -n -t db_update -r 151124_D00390_0240_AC88WPANXX\n
+ ./gbs_hiseq1.0.sh -i -n -t annotation -r 151124_D00390_0240_AC88WPANXX\n
  ./gbs_hiseq1.0.sh -i -r 161005_D00390_0268_AC9NRJANXX -s SQ2592\n
 "
 
@@ -71,7 +72,7 @@ if [ -z "$GBS_BIN" ]; then
 fi
 
 # check args
-if [[ ( $TASK != "uneak" )  && ( $TASK != "all" )  && ( $TASK != "uneak_and_db_update" ) && ( $TASK != "db_update" ) ]]; then
+if [[ ( $TASK != "uneak" )  && ( $TASK != "all" )  && ( $TASK != "uneak_and_db_update" ) && ( $TASK != "db_update" ) && ( $TASK != "annotation" )]]; then
     echo "Invalid task name - must be uneak, all, uneak_and_db_update, db_update " 
     exit 1
 fi
@@ -320,6 +321,7 @@ for processed_run_folder in $processed_run_folders; do
 
    RUN_ROOT=${BUILD_ROOT}/${run}.gbs_in_progress
    RUN_TEMP=${BUILD_ROOT}/${run}.gbs_temp
+   rm -rf $RUN_TEMP
 
    # if requested, update the database - i.e. import run and keyfiles 
    if [[ ( $TASK == "uneak_and_db_update" ) || ( $TASK == "db_update" ) ]]; then 
@@ -330,12 +332,14 @@ for processed_run_folder in $processed_run_folders; do
       exit 0
    fi
 
-   get_targets $processed_run_folder $RUN_ROOT
-
-
    # get the parameters that control the Q/C run - e.g.
    # reference genomes , blast database to use etc
    get_parameters
+
+   if [ $TASK != "annotation" ]; then 
+      get_targets $processed_run_folder $RUN_ROOT
+   fi
+
 
    # run the task 
    MAKE_TARGET="all"
@@ -345,8 +349,8 @@ for processed_run_folder in $processed_run_folders; do
       if [[ ( $TASK == "uneak" ) || ( $TASK == "uneak_and_db_update" ) ]]; then
          set -x
          MAKE_TARGET="uneak"
-      else
-         echo "Invalid task name - must be uneak or uneak_and_db_update" 
+      elif [  $TASK != "annotation" ] ; then 
+         echo "Invalid task name - must be uneak , uneak_and_db_update or annotation" 
          exit 1
       fi
       set +x
@@ -354,8 +358,6 @@ for processed_run_folder in $processed_run_folders; do
 
 
    function post_make() {
-      exit
-
       if [ $DRY_RUN == "yes" ]; then
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
          echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
@@ -397,15 +399,20 @@ for processed_run_folder in $processed_run_folders; do
 
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
-      make -n -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
-      post_make
-   else
-      set -x
-      make -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
-      if [ $? == 0 ]; then
+      if [ $TASK == "annotation" ]; then
          post_make
       else
-         echo "(non-zero exit status from make - skipping post_make)"
+         make -n -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP run_name=$RUN $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
+      fi
+   else
+      set -x
+      if [ $TASK == "annotation" ]; then
+         post_make
+      else
+         make -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP run_name=$RUN $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
+      fi
+      if [ $? != 0 ]; then
+         echo "(warning non-zero exit status from make)"
          exit 1
       fi
    fi

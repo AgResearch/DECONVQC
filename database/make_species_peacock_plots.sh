@@ -38,38 +38,48 @@ confidential.
 </tr>
 <tr>
 <td>
-<h2> KGD and other plots for $species_pattern </h2>
+<h2> KGD plots for $species_pattern </h2>
 " > /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
 
-for plot_file in 'KGD/MAFHWdgm.05.png' 'KGD/SNPDepthHist.png' 'KGD/AlleleFreq.png' 'KGD/GHWdgm.05-diag.png' 'KGD/SNPDepth.png' 'KGD/finplot.png' 'KGD/Heatmap-G5HWdgm.05.png' 'KGD/SampDepth.png' 'KGD/G-diag.png' 'KGD/Gdiagdepth.png' 'KGD/LRT-hist.png' 'KGD/MAF.png' 'KGD/GcompareHWdgm.05.png' 'KGD/Gcompare.png' 'KGD/SampDepthHist.png' 'KGD/CallRate.png' 'KGD/GHWdgm.05diagdepth.png' 'KGD/Heatmap-G5.png' 'KGD/SampDepth-scored.png' 'KGD/HWdisMAFsig.png' 'KGD/LRT-QQ.png' 'KGD/SampDepthCR.png' 'KGD/PC1v2G5HWdgm.05.png' ; do
+for plot_file in 'KGD/AlleleFreq.png'  'KGD/finplot.png'  'KGD/G-diag.png'  'KGD/HWdisMAFsig.png'  'KGD/MAF.png'  'KGD/SampDepth.png'  'KGD/SNPDepth.png' 'KGD/CallRate.png'  'KGD/GcompareHWdgm.05.png'  'KGD/GHWdgm.05diagdepth.png'  'KGD/LRT-hist.png'  'KGD/PC1v2G5HWdgm.05.png'  'KGD/SampDepth-scored.png' 'KGD/Co-call-HWdgm.05.png'  'KGD/Gcompare.png'  'KGD/GHWdgm.05-diag.png'  'KGD/LRT-QQ.png'  'KGD/SampDepthCR.png'  'KGD/SNPCallRate.png' 'KGD/Co-call-.png'  'KGD/Gdiagdepth.png'  'KGD/Heatmap-G5HWdgm.05.png'  'KGD/MAFHWdgm.05.png'  'KGD/SampDepthHist.png'  'KGD/SNPDepthHist.png' ; do
    base=`basename $plot_file`
-   suffix=`basename $base .png`
-   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${suffix}_${species_pattern}.html $PEACOCK_DATA
-   echo "<li> <a href=peacock_${suffix}_${species_pattern}.html> ${suffix} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
+   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -t image -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${base}_${species_pattern}.html $PEACOCK_DATA
+   echo "<li> <a href=peacock_${base}_${species_pattern}.html> ${base} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
 done
+
 
 echo "
 <p/>
-<h2> Sample blast plots </h2> " >> /dataset/hiseq/scratch/postprocessing/peacock_index.html
+<h2> KGD links to logs , text summaries </h2> " >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
+for plot_file in 'KGD/kgd.stdout'  'KGD/HeatmapOrderHWdgm.05.csv'  'KGD/PCG5HWdgm.05.pdf'  'KGD/SampleStats.csv'  'KGD/HighRelatedness.csv'  'KGD/seqID.csv'  'KGD/HighRelatednessHWdgm.05.csv' ; do
+   base=`basename $plot_file`
+set -x
+   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -t link -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${base}_${species_pattern}.html $PEACOCK_DATA 
+set +x
+   echo "<li> <a href=peacock_${base}_${species_pattern}.html> ${base}_${species_pattern} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
+done
+
+
+echo "
+<p/>
+<h2> Sample blast plots </h2> " >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
 
 for plot_file in 'blast_analysis/sample_blast_summary.jpg' ; do
    base=`basename $plot_file`
-   suffix=`basename $base .jpg`
 set -x
-   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${suffix}_${species_pattern}.html $PEACOCK_DATA 
+   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -t image -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${base}_${species_pattern}.html $PEACOCK_DATA 
 set +x
-   echo "<li> <a href=peacock_${suffix}_${species_pattern}.html> ${suffix} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
+   echo "<li> <a href=peacock_${base}_${species_pattern}.html> ${base} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
 done
 
 echo "
 <p/>
-<h2> k-mer analysis plots </h2> " >> /dataset/hiseq/scratch/postprocessing/peacock_index.html
+<h2> k-mer analysis plots </h2> " >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
 
 for plot_file in 'kmer_analysis/kmer_zipfian_comparisons.jpg' 'kmer_analysis/kmer_entropy.jpg' 'kmer_analysis/zipfian_distances.jpg' ; do
    base=`basename $plot_file`
-   suffix=`basename $base .jpg`
-   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${suffix}_${species_pattern}.html $PEACOCK_DATA 
-   echo "<li> <a href=peacock_${suffix}_${species_pattern}.html> ${suffix} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
+   $GBS_BIN/database/make_peacock_plots.py -f $plot_file -t image -s $species_pattern -o /dataset/hiseq/scratch/postprocessing/peacock_${base}_${species_pattern}.html $PEACOCK_DATA 
+   echo "<li> <a href=peacock_${base}_${species_pattern}.html> ${base} </a> </li>" >> /dataset/hiseq/scratch/postprocessing/peacock_${species_pattern}_index.html
 done
 
 

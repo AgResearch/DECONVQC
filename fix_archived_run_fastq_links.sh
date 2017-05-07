@@ -80,7 +80,21 @@ function fix_links() {
       echo "fixing link $seqlink currently pointing to file $target"
       # look for the file under $ARCHIVE_ROOT/$RUN
       base=`basename $target`
-      new_target=`find $ARCHIVE_ROOT/$RUN -name $base -print`
+      new_target=`find $ARCHIVE_ROOT/$RUN -name $base -print`   
+
+      # in some cases there may be more than one target found - use the "last" one - 
+      # this will be the deepest and so for the current layout of fastq will pick up the 
+      # link which is what we want.
+      # (At the moment the archiving process is avoiding making any assumptions about which of 
+  
+      
+      echo "found the following targets : "
+  
+      for new_target_word in $new_target; do
+         echo $new_target_word
+      done 
+      new_target=$new_target_word 
+
       if [ -z "$new_target" ]; then
          echo "ERROR - could not find $base under $ARCHIVE_ROOT/$RUN"
       elif [ ! -s $new_target ]; then

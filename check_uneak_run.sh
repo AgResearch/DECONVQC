@@ -9,7 +9,7 @@
 dirname=$1
 check_moniker=$2
 if [ $check_moniker == "global" ]; then
-   error_files=`find $dirname -name "*.se" -size +0c -ls`
+   error_files=`find $dirname -name "*.se" -type f -size +0c -ls`
 
    if [ -z "$error_files" ]; then
       exit 0

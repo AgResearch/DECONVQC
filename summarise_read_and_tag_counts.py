@@ -42,9 +42,9 @@ first record is :
     excluded = list(exclusions_stream)
     print "Excluded the following records : %s"%str(excluded)
 
-    # get the flowcell and SQ names from those first excluded records
-    flowcell=excluded[0][1]
-    sq =excluded[0][3]    
+    # get the flowcell and SQ names from the "totals" records
+    flowcell=[record for record in excluded if record[0].lower() == "total"][0][1]
+    sq = [record for record in excluded if record[0].lower() == "total"][0][3]    
     
                                                                   
     tags_reads = list((int(record[4]), int(record[5]), record[1], record[3]) for record in tuple_stream)

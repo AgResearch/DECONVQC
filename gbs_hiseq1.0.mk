@@ -133,6 +133,7 @@ versions.log:
 	# make the key file
 	# set up any required soft links to sequences to satisfy tassel 
 	mv $< $@
+	$(GBS_BIN)/merge_enzymes.sh  -r $(run_name) -m $(machine)
 	touch $@
 
 %.blast_analysis: $(blast_analyses) 
@@ -158,9 +159,8 @@ versions.log:
 
 .SECONDEXPANSION:
 %.sample_in_progress/uneak_in_progress:  $$(addprefix $$@/, $$(notdir $$(addsuffix .enzyme , $$(wildcard $(run_temp)/$$(*F)/uneak_enzymes/* ))))
-	# running merge of enzyme-specific results
-	echo "running merge of $+ to obtain $@"
-	$(GBS_BIN)/merge_enzymes.sh  $@ $+
+	# check OK 
+	echo "checking enzyme results OK"
 
 
 %.enzyme:  %.enzyme/KGD

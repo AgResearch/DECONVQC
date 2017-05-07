@@ -260,9 +260,9 @@ def generate_run_plot(options):
                         print >> out_stream,"<td align=center>"
                         samples = [ sample for sample in run_samples if int(sample["lane"]) == lane ]
                         if len(samples) > 1:
-                            print "Error , more the one sample found for lane %d in run %s"%(lane,run)
+                            print "Error , more the one sample found for lane %d in run %s"%(lane,options["run_name"])
                         elif len(samples) == 0:
-                            print "could not find a sample for lane %d in run%s"%(lane, run)
+                            print "could not find a sample for lane %d in run%s"%(lane, options["run_name"])
                             print >> out_stream,"(no sample)"
                             stats["no sample count"] += 1
                         else:

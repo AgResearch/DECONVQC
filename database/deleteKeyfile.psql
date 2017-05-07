@@ -4,3 +4,7 @@
 delete from gbsKeyFileFact  
 where 
    biosampleob = (select obid from biosampleob where samplename = :keyfilename);
+delete from gbsyieldfact
+where
+   sqname = :keyfilename;
+

@@ -134,7 +134,7 @@ function add_kgd_comments() {
 KGD diagnostic output for $sample_name :
 " >>  /tmp/${RUN_NAME}.annotation.psql
 
-         cat $file | egrep -v "^\[" >> /tmp/${RUN_NAME}.annotation.psql
+         cat $file | egrep -v "^\[" | sed "s/'/''/g" - >> /tmp/${RUN_NAME}.annotation.psql
          echo "
 ' as text),
 cast('deconvqc' as text),
