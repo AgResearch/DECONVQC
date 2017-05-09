@@ -20,7 +20,6 @@ TASK=uneak
 RUN=all
 MACHINE=hiseq
 SAMPLE=""
-ENZYME=""
 
 while getopts ":niht:r:m:s:e:" opt; do
   case $opt in
@@ -35,9 +34,6 @@ while getopts ":niht:r:m:s:e:" opt; do
       ;;
     m)
       MACHINE=$OPTARG
-      ;;
-    e)
-      ENZYME=$OPTARG
       ;;
     r)
       RUN=$OPTARG
