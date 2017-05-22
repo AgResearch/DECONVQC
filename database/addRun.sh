@@ -135,7 +135,8 @@ insert into hiseqSampleSheetFact (
    SampleProject ,
    sampleplate,
    samplewell,
-   downstream_processing)
+   downstream_processing,
+   basespace_project)
 select
    obid,
    FCID ,
@@ -150,7 +151,8 @@ select
    SampleProject, 
    sampleplate,
    samplewell ,
-   downstream_processing
+   downstream_processing,
+   basespace_project
 from 
    bioSampleList as s join samplesheet_temp as t
    on s.listName = :run_name and 

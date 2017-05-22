@@ -32,7 +32,7 @@ def sanitise(options):
    csvreader = csv.reader(sys.stdin)
    csvwriter = csv.writer(sys.stdout)
    filter_record = True
-   standard_header = ["fcid","lane","sampleid","sampleref","sampleindex","description","control","recipe","operator","sampleproject","sampleplate","samplewell","downstream_processing"]
+   standard_header = ["fcid","lane","sampleid","sampleref","sampleindex","description","control","recipe","operator","sampleproject","sampleplate","samplewell","downstream_processing","basespace_project"]
 
    for record in csvreader:
       
@@ -75,6 +75,7 @@ def sanitise(options):
          out_record_dict["sampleplate"] = get_import_value(record_dict, "(sample[_]*plate)")
          out_record_dict["samplewell"] = get_import_value(record_dict, "(sample[_]*well)")
          out_record_dict["downstream_processing"] = get_import_value(record_dict, "(downstream_processing)")
+         out_record_dict["basespace_project"] = get_import_value(record_dict, "(basespace_project)")
          
                                     
          record = [out_record_dict.get(key,"") for key in standard_header]

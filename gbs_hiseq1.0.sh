@@ -69,7 +69,7 @@ fi
 
 # check args
 if [[ ( $TASK != "uneak" )  && ( $TASK != "all" )  && ( $TASK != "uneak_and_db_update" ) && ( $TASK != "db_update" ) && ( $TASK != "annotation" )]]; then
-    echo "Invalid task name - must be uneak, all, uneak_and_db_update, db_update " 
+    echo "Invalid task name - must be uneak, all, uneak_and_db_update, db_update or annotation" 
     exit 1
 fi
 
