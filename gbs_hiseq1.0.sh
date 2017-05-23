@@ -170,19 +170,19 @@ function get_targets() {
       sample_monikers=`psql -U agrbrdf -d agrbrdf -h invincible -v run=\'$RUN\' -f database/get_run_samples.psql -q`
       for sample_moniker in $sample_monikers; do
          sample_targets="$sample_targets $my_run_root/${sample_moniker}.processed_sample"
-         mkdir -p $RUN_TEMP/${sample_moniker}/uneak_enzymes
-         enzymes=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name enzymes  --sample $sample_moniker`
-         for enzyme in $enzymes; do
-            echo "" > $RUN_TEMP/${sample_moniker}/uneak_enzymes/$enzyme
+         mkdir -p $RUN_TEMP/${sample_moniker}/uneak_cohorts
+         cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_moniker`
+         for cohort in $cohorts; do
+            echo "" > $RUN_TEMP/${sample_moniker}/uneak_cohorts/$cohort
          done
       done
    else
       sample_monikers=$SAMPLE
       sample_targets=$my_run_root/${SAMPLE}.processed_sample
-      mkdir -p $RUN_TEMP/${sample_monikers}/uneak_enzymes
-      enzymes=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name enzymes  --sample $sample_monikers`
-      for enzyme in $enzymes; do
-         echo "" > $RUN_TEMP/${sample_monikers}/uneak_enzymes/$enzyme
+      mkdir -p $RUN_TEMP/${sample_monikers}/uneak_cohorts
+      cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_monikers`
+      for cohort in $cohorts; do
+         echo "" > $RUN_TEMP/${sample_monikers}/uneak_cohorts/$cohort
       done
    fi
 

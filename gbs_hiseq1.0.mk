@@ -133,7 +133,7 @@ versions.log:
 	# make the key file
 	# set up any required soft links to sequences to satisfy tassel 
 	mv $< $@
-	$(GBS_BIN)/merge_enzymes.sh  -r $(run_name) -m $(machine)
+	$(GBS_BIN)/merge_cohorts.sh  -r $(run_name) -m $(machine)
 	touch $@
 
 %.blast_analysis: $(blast_analyses) 
@@ -158,12 +158,12 @@ versions.log:
 	touch $@
 
 .SECONDEXPANSION:
-%.sample_in_progress/uneak_in_progress:  $$(addprefix $$@/, $$(notdir $$(addsuffix .enzyme , $$(wildcard $(run_temp)/$$(*F)/uneak_enzymes/* ))))
+%.sample_in_progress/uneak_in_progress:  $$(addprefix $$@/, $$(notdir $$(addsuffix .cohort , $$(wildcard $(run_temp)/$$(*F)/uneak_cohorts/* ))))
 	# check OK 
-	echo "checking enzyme results OK"
+	echo "checking cohort results OK"
 
 
-%.enzyme:  %.enzyme/KGD
+%.cohort:  %.cohort/KGD
 #	# check it looks ok
 	echo "checking $@"
 
@@ -182,53 +182,53 @@ versions.log:
 	$(GBS_BIN)/kmer_entropy.py -b $(@D) -t frequency -k 6 -p 1 -o $(@D)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/frequency.stdout 2>$(@D)/frequency.stderr
 	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $(GBS_BIN)/kmer_plots_gbs.r datafolder=$(@D) 1>$(@D)/plots.stdout 2>$(@D)/plots.stderr
 
-%.enzyme/KGD: %.enzyme/hapMap
+%.cohort/KGD: %.cohort/hapMap
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/run_kgd.sh $@ 
 
-%.enzyme/hapMap: %.enzyme/mapInfo
+%.cohort/hapMap: %.cohort/mapInfo
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UMapInfoToHapMapPlugin -w ./ -mnMAF 0.03 -mxMAF 0.5 -mnC 0.1 -endPlugin -runfork1 > UMapInfoToHapMap.out 2> UMapInfoToHapMap.se
 
-%.enzyme/mapInfo: %.enzyme/tagsByTaxa
+%.cohort/mapInfo: %.cohort/tagsByTaxa
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTBTToMapInfoPlugin -w ./ -endPlugin -runfork1 > UTBTToMapInfo.out 2> UTBTToMapInfo.se 
 
-%.enzyme/tagsByTaxa: %.enzyme/tagPair
+%.cohort/tagsByTaxa: %.cohort/tagPair
 
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTagPairToTBTPlugin -w ./ -endPlugin -runfork1 > UTagPairToTBT.out 2> UTagPairToTBT.se 
 
-%.enzyme/tagPair: %.enzyme/mergedTagCounts
+%.cohort/tagPair: %.cohort/mergedTagCounts
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UTagCountToTagPairPlugin -w ./ -e 0.03 -endPlugin -runfork1 > UTagCountToTagPair.out 2> UTagCountToTagPair.se 
 
-%.enzyme/mergedTagCounts: %.enzyme/tagCounts
+%.cohort/mergedTagCounts: %.cohort/tagCounts
 	mkdir -p $@
 	touch $@
 	cd $@/..;run_pipeline.pl -Xms512m -Xmx500g -fork1 -UMergeTaxaTagCountPlugin -w ./ -m 600000000 -x 100000000 -c 5 -endPlugin -runfork1 > UMergeTaxaTagCount.out 2> UMergeTaxaTagCount.se 
 
-%.enzyme/tagCounts: %.enzyme/Illumina  %.enzyme/key
+%.cohort/tagCounts: %.cohort/Illumina  %.cohort/key
 	mkdir -p $@
 	touch $@
-	#enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; echo "making UFastqToTagCount using enzyme $$enzyme"
-	#cd $@/..; enzyme=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name enzymes  --sample $(notdir $*)`; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $$enzyme -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
-	echo "making UFastqToTagCount using enzyme $(*F)"
+	#cohort=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name cohorts  --sample $(notdir $*)`; echo "making UFastqToTagCount using cohort $$cohort"
+	#cd $@/..; cohort=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name cohorts  --sample $(notdir $*)`; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $$cohort -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
+	echo "making UFastqToTagCount using cohort $(*F)"
 	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $(*F) -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$2}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; $(GBS_BIN)/get_reads_tags_per_sample.py  
 
-%.enzyme/Illumina: 
+%.cohort/Illumina: 
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/link_fastq_files.sh $@
 
-%.enzyme/key: 
+%.cohort/key: 
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/link_key_files.sh $@
@@ -237,7 +237,7 @@ versions.log:
 ##############################################
 # specify the intermediate files to keep 
 ##############################################
-.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.enzyme/kmer_analysis %.enzyme/blast_analysis %.processed_sample/uneak/blast_analysis %.enzyme/KGD %.enzyme/hapMap %.enzyme/mapInfo %.enzyme/tagsByTaxa %.enzyme/tagPair %.enzyme/mergedTagCounts %.enzyme/tagCounts %.enzyme/Illumina %.enzyme/key %.enzyme/blast_analysis/sample_blast_summary.jpg %.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.enzyme/kmer_analysis/zipfian_distances.jpg
+.PRECIOUS:  %.gbs %.gbs_in_progress %.processed_sample %.sample_in_progress %.sample_in_progress/uneak %.sample_in_progress/uneak_in_progress %.cohort/kmer_analysis %.cohort/blast_analysis %.processed_sample/uneak/blast_analysis %.cohort/KGD %.cohort/hapMap %.cohort/mapInfo %.cohort/tagsByTaxa %.cohort/tagPair %.cohort/mergedTagCounts %.cohort/tagCounts %.cohort/Illumina %.cohort/key %.cohort/blast_analysis/sample_blast_summary.jpg %.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg %.cohort/kmer_analysis/zipfian_distances.jpg
 
 ##############################################
 # cleaning - not yet doing this using make  

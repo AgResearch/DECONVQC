@@ -4,6 +4,7 @@
 # The argument is the folder in which to link - e.g.
 #### /dataset/hiseq/scratch/postprocessing/150925_D00390_0235_BC6K0YANXX.gbs_in_progress/SQ0123.sample_in_progress/uneak_in_progress/Illumina
 #    /dataset/hiseq/scratch/postprocessing/170413_D00390_0295_BCA5EWANXX.gbs_in_progress/SQ0419.sample_in_progress/uneak_in_progress/PstI.enzyme/Illumina
+#    /dataset/hiseq/scratch/postprocessing/170413_D00390_0295_BCA5EWANXX.gbs_in_progress/SQ0419.sample_in_progress/uneak_in_progress/Deer.PstI.cohort/Illumina
 
 
 # get the flowcellid so that we can only include fastq files related to this flowcell 

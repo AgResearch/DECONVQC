@@ -4,6 +4,7 @@
 # The argument is the folder in which to link - e.g.
 #### /dataset/hiseq/scratch/postprocessing/150925_D00390_0235_BC6K0YANXX.gbs_in_progress/SQ0123.sample_in_progress/uneak_in_progress/key
 #    /dataset/hiseq/scratch/postprocessing/170413_D00390_0295_BCA5EWANXX.gbs_in_progress/SQ0419.sample_in_progress/uneak_in_progress/PstI.enzyme/key
+#    /dataset/hiseq/scratch/postprocessing/170511_D00390_0302_BCA92MANXX.gbs/SQ0451.processed_sample/uneak/PstI.PstI.enzyme
 
 
 KEY_ROOT=/dataset/hiseq/active/key-files
@@ -21,10 +22,11 @@ fcid=`echo $fcid | awk -F. '{print $1}' -`
 libname=`echo $libname | awk -F. '{print $1}' -`
 fcid=`echo $fcid | awk -F_ '{print substr($4,2)}' -`
 
-enzyme=`echo $1 | awk -F/ '{print $9}' -`
-enzyme=`echo $enzyme | awk -F. '{print $1}' -`
+cohort=`echo $1 | awk -F/ '{print $9}' -`
+enzyme=`echo $cohort | awk -F. '{print $2}' -`
+gbs_cohort=`echo $cohort | awk -F. '{print $1}' -`
 
-$GBS_BIN/database/listDBKeyfile.sh -s $libname -f $fcid -e $enzyme > $1/$key_base
+$GBS_BIN/database/listDBKeyfile.sh -s $libname -f $fcid -e $enzyme -g $gbs_cohort > $1/$key_base
 set +x
 
 exit 0

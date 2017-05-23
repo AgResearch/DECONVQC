@@ -51,50 +51,49 @@ def get_value(options):
     return value 
 
 
-def get_enzyme(library_name, run_name):
+def get_cohort(library_name, run_name):
     """
     database queries are wrapped in scripting mainly for authentication reasons (credentials can be suppied in .pgpass) - 
     also makes the query accessible from shell scripts
     """
     #print "DEBUG run=%s lib=%s"%(run_name, library_name)
-    # first check only one enzyme is specified.
     flowcell=None
-    enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_count_from_database.sh"), run_name, library_name]
-    #print "DEBUG running %s"%str(enzyme_query)
-    proc = subprocess.Popen(enzyme_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cohort_query = [os.path.join(os.environ["GBS_BIN"], "database/get_cohort_count_from_database.sh"), run_name, library_name]
+    #print "DEBUG running %s"%str(cohort_query)
+    proc = subprocess.Popen(cohort_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
-        raise Exception("Unable to get enzyme count from %s - call returned an error"%str(enzyme_query))    
+        raise Exception("Unable to get cohort count from %s - call returned an error"%str(cohort_query))    
     if stdout.strip() not in ["0","1"]:
         # try including flowcell in the query 
         run_tokens = re.split("_", run_name)
         if len(run_tokens) != 4:
             raise Exception("Unable to parse flowcell id from %s"%run_name)
         flowcell = run_tokens[3][1:]
-        enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_count_from_database.sh"), run_name, library_name, flowcell]
-        proc = subprocess.Popen(enzyme_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cohort_query = [os.path.join(os.environ["GBS_BIN"], "database/get_cohort_count_from_database.sh"), run_name, library_name, flowcell]
+        proc = subprocess.Popen(cohort_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
         if proc.returncode != 0:
-            raise Exception("Unable to get enzyme count from %s - call returned an error"%str(enzyme_query))
+            raise Exception("Unable to get cohort count from %s - call returned an error"%str(cohort_query))
         #if stdout.strip() not in ["0","1"]:
-        #    #raise Exception("Error - found %s enzymes for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
-        #    raise Exception("Error - found %s enzymes for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
+        #    #raise Exception("Error - found %s cohorts for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
+        #    raise Exception("Error - found %s cohorts for library %s, run %s, flowcell %s - this is not going to work ! CHECK KEYFILE !!!!!"%(stdout.strip(), library_name, run_name, flowcell))
     if stdout.strip() == "0":
         return "undefined"
 
-    # got this far - so get the enzyme
+    # got this far - so get the cohort
     if flowcell is None:
-        enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_from_database.sh"), run_name, library_name]
+        cohort_query = [os.path.join(os.environ["GBS_BIN"], "database/get_cohort_from_database.sh"), run_name, library_name]
     else:
-        enzyme_query = [os.path.join(os.environ["GBS_BIN"], "database/get_enzyme_from_database.sh"), run_name, library_name, flowcell]
+        cohort_query = [os.path.join(os.environ["GBS_BIN"], "database/get_cohort_from_database.sh"), run_name, library_name, flowcell]
         
-    #print "DEBUG running %s"%str(enzyme_query)
-    proc = subprocess.Popen(enzyme_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #print "DEBUG running %s"%str(cohort_query)
+    proc = subprocess.Popen(cohort_query, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
-        raise Exception("Unable to get enzyme from %s - called returned an error"%str(enzyme_query))
+        raise Exception("Unable to get cohort from %s - called returned an error"%str(cohort_query))
     if len(stdout.strip()) <= 1:
-        raise Exception("Unable to get a valid looking enzyme from %s - called returned <%s>"%(str(enzyme_query), stdout.strip()))
+        raise Exception("Unable to get a valid looking cohort from %s - called returned <%s>"%(str(cohort_query), stdout.strip()))
     #print "DEBUG - got %s"%stdout.strip()
  
     #return stdout.strip()
@@ -122,7 +121,7 @@ def get_json(options):
 
     # find the nearest match of each sample description  in sample_sheet_dict, in key of species_references_dict
     alignment_references = {}
-    enzymes = {}
+    cohorts = {}
     descriptions = open(options["parameter_file"],"r").read()
     for sample in sample_sheet_dict:
         # begin long-winded code to do a fuzzymatch on species , between sample-sheet and species-ref-file
@@ -144,11 +143,11 @@ def get_json(options):
         if len(sample.strip()) > 2:
             alignment_references[sample]  = best_reference
             #print "debug2 sample=%s run=%s"%(sample, run_name)
-            enzymes[sample] = get_enzyme(sample, run_name)
+            cohorts[sample] = get_cohort(sample, run_name)
 
     json_dict = {
          "bwa_alignment_reference" : alignment_references,
-         "enzymes" : enzymes,
+         "cohorts" : cohorts,
          "descriptions" : descriptions,
          #"blast_database" : "/bifo/active/blastdata/mirror/refseq_genomic",
          #"blast_alignment_parameters" : "-evalue 1.0e-10 -penalty -3 -reward 2 -gapopen 5 -gapextend 2 -word_size 11 -template_type coding_and_optimal -template_length 21 -min_raw_gapped_score 56 -dust '20 64 1' -lcase_masking -soft_masking true",
@@ -168,14 +167,14 @@ def get_options():
     long_description = """
 
 example : ./get_processing_parameters.py --parameter_file /dataset/hiseq/active/141217_D00390_0214_BC4UEHACXX/SampleProcessing.json --parameter_name alignment_reference  --sample SQ0018
-example : ./get_processing_parameters.py --json_out_file /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleProcessing.json --parameter_file /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleSheet.csv --species_references_file  /dataset/hiseq/active/sample-sheets/reference_genomes.csv  
+example : ./get_processing_parameters.py --json_out_file /dataset/hiseq/scratch/postprocessing/170519_D00390_0303_ACA95UANXX.SampleProcessing.json --parameter_file /dataset/hiseq/active/170519_D00390_0303_ACA95UANXX/SampleSheet.csv --species_references_file  /dataset/hiseq/active/sample-sheets/reference_genomes.csv  
 
 """
 
     parser = argparse.ArgumentParser(description=description, epilog=long_description, formatter_class = argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--parameter_file', dest='parameter_file', default=None, help="name of parameter file (sample sheet csv or sample processing json)", required=True)
     parser.add_argument('--parameter_name', dest='parameter_name', default=None, \
-                   choices=["bwa_alignment_reference","blast_database","blast_alignment_parameters","blast_task","bwa_alignment_parameters","adapter_to_cut","enzymes"],help="name of parameter")
+                   choices=["bwa_alignment_reference","blast_database","blast_alignment_parameters","blast_task","bwa_alignment_parameters","adapter_to_cut","cohorts"],help="name of parameter")
     parser.add_argument('--sample', dest='sample', default=None, help="sample name")
     parser.add_argument('--species_references_file', dest='species_references_file', default=None, help="a CSV file mapping species to indexed references")
     parser.add_argument('--json_out_file', dest='json_out_file', default=None, help="name of json output file")
