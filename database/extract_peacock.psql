@@ -14,6 +14,8 @@ from
    s.obid )left outer join biosamplelist as l on
    upper(l.listname) like '%'||upper(flowcell)||'%' and
    l.listcomment = 'AgResearch Hiseq Run'
+where 
+   l.listname is not null
 group by 
     l.listname ,
     lane             ,

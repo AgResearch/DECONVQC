@@ -123,6 +123,11 @@ def get_json(options):
     alignment_references = {}
     cohorts = {}
     descriptions = open(options["parameter_file"],"r").read()
+    try:
+        downstream_processing = get_csv_dict( options["parameter_file"],"SampleID","downstream_processing" )
+    except:
+        downstream_processing = get_csv_dict( options["parameter_file"],"Sample_ID","downstream_processing" )
+     
     for sample in sample_sheet_dict:
         # begin long-winded code to do a fuzzymatch on species , between sample-sheet and species-ref-file
         best_reference = ''
@@ -149,6 +154,7 @@ def get_json(options):
          "bwa_alignment_reference" : alignment_references,
          "cohorts" : cohorts,
          "descriptions" : descriptions,
+         "downstream_processing" : downstream_processing,
          #"blast_database" : "/bifo/active/blastdata/mirror/refseq_genomic",
          #"blast_alignment_parameters" : "-evalue 1.0e-10 -penalty -3 -reward 2 -gapopen 5 -gapextend 2 -word_size 11 -template_type coding_and_optimal -template_length 21 -min_raw_gapped_score 56 -dust '20 64 1' -lcase_masking -soft_masking true",
          #"blast_task" : "dc-megablast",
@@ -174,7 +180,7 @@ example : ./get_processing_parameters.py --json_out_file /dataset/hiseq/scratch/
     parser = argparse.ArgumentParser(description=description, epilog=long_description, formatter_class = argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--parameter_file', dest='parameter_file', default=None, help="name of parameter file (sample sheet csv or sample processing json)", required=True)
     parser.add_argument('--parameter_name', dest='parameter_name', default=None, \
-                   choices=["bwa_alignment_reference","blast_database","blast_alignment_parameters","blast_task","bwa_alignment_parameters","adapter_to_cut","cohorts"],help="name of parameter")
+                   choices=["downstream_processing", "bwa_alignment_reference","blast_database","blast_alignment_parameters","blast_task","bwa_alignment_parameters","adapter_to_cut","cohorts"],help="name of parameter")
     parser.add_argument('--sample', dest='sample', default=None, help="sample name")
     parser.add_argument('--species_references_file', dest='species_references_file', default=None, help="a CSV file mapping species to indexed references")
     parser.add_argument('--json_out_file', dest='json_out_file', default=None, help="name of json output file")

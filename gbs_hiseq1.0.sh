@@ -356,8 +356,6 @@ for processed_run_folder in $processed_run_folders; do
    function post_make() {
       if [ $DRY_RUN == "yes" ]; then
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
-         echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
-         echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
          echo "$GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN"
          echo "Rscript --vanilla  $GBS_BIN/tags_plots.r  run_name=$RUN"
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
@@ -371,8 +369,6 @@ for processed_run_folder in $processed_run_folders; do
          echo "$GBS_BIN/database/import_kgd_stats.sh -r $RUN"
       else
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
-         $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
-         Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
          $GBS_BIN/summarise_global_hiseq_reads_tags_cv.sh $RUN
          Rscript --vanilla  $GBS_BIN/tags_plots.r run_name=$RUN
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql

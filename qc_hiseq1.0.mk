@@ -31,6 +31,7 @@ RUN_FASTQC=fastqc
 RUN_BCL2FASTQ=/usr/local/bin/bcl2fastq 
 RUN_CONTAMINATION_CHECK=$(GBS_BIN)/run_sample_contamination_checks.sh
 RUN_MAPPING_PREVIEW=$(GBS_BIN)/run_mapping_preview.sh
+RUN_KMER_ANALYSIS=$(GBS_BIN)/run_kmer_analysis.sh
 
 # variables for tardis and other apps
 machine=hiseq
@@ -132,10 +133,20 @@ versions.log:
 %.all: %.processed/mapping_preview  %.processed/fastqc_analysis 
 	echo making $@
 
+%.processed/kmer_analysis: %.processed/kmer_analysis_in_progress
+	# check it all looks right and then
+	# temporarily commented out while debugging
+	mv $< $@
+
 %.processed/mapping_preview: %.processed/mapping_preview_in_progress
 	# check it all looks right and then
 	# temporarily commented out while debugging
 	mv $< $@
+
+%.processed/kmer_analysis_in_progress: %.processed/taxonomy_analysis
+	mkdir -p $@
+	touch $@
+	cd $@; $(RUN_KMER_ANALYSIS) $(run) $@
 
 %.processed/mapping_preview_in_progress: %.processed/taxonomy_analysis
 	mkdir -p $@
@@ -152,7 +163,8 @@ versions.log:
 	mkdir -p $@
 	touch $@
 	#$(RUN_CONTAMINATION_CHECK) $(notdir $(*F)) $(TARDIS_chunksize) $(SAMPLE_RATE) 
-	cd $@; $(RUN_CONTAMINATION_CHECK) $(run) $@ $($(machine)) 
+	#cd $@; $(RUN_CONTAMINATION_CHECK) $(run) $@ $($(machine)) 
+	cd $@; $(RUN_CONTAMINATION_CHECK) $(run) $@  
 
 %.processed/fastqc_analysis: %.processed/fastqc_analysis_in_progress
 	# check it all looks right and then
