@@ -187,8 +187,6 @@ for completed_run_landmark in $completed_run_landmarks; do
       exit 1
    fi
 
-
-
    RUN_ROOT=${BUILD_ROOT}/${run}.processed
    MAPPING_FOLDER=${RUN_ROOT}/mapping_analysis_in_progress
 
