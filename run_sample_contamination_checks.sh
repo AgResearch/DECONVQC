@@ -133,6 +133,7 @@ if [ "$SELECT" != "blast-only" ]; then
    sample_count=`wc ${RUN_ROOT}/lolf.txt | awk '{print $1}' -`
    launched_count=0
    launched_list=`mktemp`
+   set -x
    for sample_list_file in `cat ${RUN_ROOT}/lolf.txt`; do
       sample=`basename $sample_list_file`
       sample_name=`basename $sample .list`
@@ -141,6 +142,14 @@ if [ "$SELECT" != "blast-only" ]; then
           mkdir ${WORKING_FOLDER}/${sample_name}.trimming
       fi
       sample_trimmed_file=${WORKING_FOLDER}/${sample}.sample.fastq.trimmed
+
+
+      if [ -f ${sample_trimmed_file}.gz ]; then
+         echo "skipping ${sample_trimmed_file}.gz already done"
+         continue
+      fi
+      #exit  # DEBUG ! - trying to work out why its not skipping 
+
       echo "queuing $sample_list_file"
       # get sample rate chunksize and method from the first file in the list
       for fastq_file in `cat $sample_list_file` ; do  
@@ -174,6 +183,7 @@ if [ "$SELECT" != "blast-only" ]; then
          launched_list=`mktemp`
       fi
    done 
+   set +x
 else
    echo "(skipping trim)"
 fi
@@ -194,6 +204,12 @@ if [ "$SELECT" != "trim-only" ]; then
       fi
       sample_trimmed_file=${WORKING_FOLDER}/${sample}.sample.fastq.trimmed.gz
       sample_output_file=${WORKING_FOLDER}/${sample}.blastresults.txt
+
+      if [ -f ${sample_output_file}.gz ]; then
+         echo "skipping ${sample_output_file}.gz already done"
+         continue
+      fi
+
       echo "queuing $sample_trimmed_file"
       #chunk_size=`python -c "print int(${TARDIS_chunksize} * ${SAMPLE_RATE})" `
       get_samplerate_chunksize $sample_trimmed_file  # (we only actually want chunk size at this point)

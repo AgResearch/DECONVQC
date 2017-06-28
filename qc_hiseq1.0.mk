@@ -130,7 +130,7 @@ versions.log:
 # top level targets
 ######################################################################
 .PHONY : %.all 
-%.all: %.processed/mapping_preview  %.processed/fastqc_analysis 
+%.all: %.processed/mapping_preview  %.processed/fastqc_analysis  %.processed/kmer_analysis
 	echo making $@
 
 %.processed/kmer_analysis: %.processed/kmer_analysis_in_progress
@@ -146,13 +146,13 @@ versions.log:
 %.processed/kmer_analysis_in_progress: %.processed/taxonomy_analysis
 	mkdir -p $@
 	touch $@
-	cd $@; $(RUN_KMER_ANALYSIS) $(run) $@
+	cd $@; $(RUN_KMER_ANALYSIS) $(run) $@ > $@/run_kmer_analysis.log 2>&1 
 
 %.processed/mapping_preview_in_progress: %.processed/taxonomy_analysis
 	mkdir -p $@
 	touch $@
 	#$(RUN_MAPPING_PREVIEW) $(notdir $(*F)) $(machine)
-	cd $@; $(RUN_MAPPING_PREVIEW) $(run) $@
+	cd $@; $(RUN_MAPPING_PREVIEW) $(run) $@ > $@/run_mapping_preview.log 2>&1
 
 %.processed/taxonomy_analysis: %.processed/taxonomy_analysis_in_progress
 	# check it all looks right and then
@@ -164,7 +164,7 @@ versions.log:
 	touch $@
 	#$(RUN_CONTAMINATION_CHECK) $(notdir $(*F)) $(TARDIS_chunksize) $(SAMPLE_RATE) 
 	#cd $@; $(RUN_CONTAMINATION_CHECK) $(run) $@ $($(machine)) 
-	cd $@; $(RUN_CONTAMINATION_CHECK) $(run) $@  
+	cd $@; $(RUN_CONTAMINATION_CHECK) $(run) $@ > $@/run_contamination_check.log 2>&1
 
 %.processed/fastqc_analysis: %.processed/fastqc_analysis_in_progress
 	# check it all looks right and then

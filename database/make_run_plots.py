@@ -82,8 +82,24 @@ footer1="""
 </td>
 </tr>
 </table>
-
-
+<h2> Lane level kmer plots </h2>
+<table width="30%%" align=center>
+<tr>
+<td>
+<img src="%(run_name)s.processed/kmer_analysis/kmer_entropy.jpg"/>
+</td>
+</tr>
+<tr>
+<td>
+<img src="%(run_name)s.processed/kmer_analysis/kmer_zipfian_comparisons.jpg"/>
+</td>
+</tr>
+<tr>
+<td>
+<img src="%(run_name)s.processed/kmer_analysis/kmer_zipfian.jpg"/>
+</td>
+</tr>
+</table>
 <h2 id="spreadsheets"> Spreadsheet Summaries and Log Files</h2>
 <table width=60%% align=left>
 <tr>
