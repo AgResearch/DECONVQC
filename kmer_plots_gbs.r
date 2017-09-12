@@ -263,6 +263,26 @@ draw_entropy_heatmap <- function(datamatrix, output_folder, heatmap_image_file, 
        keysize=1.0, margin=c(40,60), cexRow=1.3, cexCol=1.3, 
        lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .8, 0 ), lhei=c(.5, 3) , labRow = rowLabels, labCol=colLabels)
    dev.off()
+
+   write.table(colnames(datamatrix)[hm$colInd[1:length(hm$colInd)]] , file="samplenames_ordered_as_heatmap.txt",row.names=TRUE,sep="\t") 
+   write.table(rownames(datamatrix)[hm$rowInd[length(hm$rowInd):1]] , file="6mers_ordered_as_heatmap.txt",row.names=TRUE,sep="\t") 
+
+   orderedmat=datamatrix[hm$rowInd[length(hm$rowInd):1],]
+   orderedmat=orderedmat[,hm$colInd[1:length(hm$colInd)]]  # NB, the column labels come out reversed !
+   write.table(orderedmat,file="data_ordered_as_heatmap.txt",row.names=TRUE,sep="\t")
+
+   clust = as.hclust(hm$colDendrogram)
+   sink("heatmap_sample_clustering_support.txt")
+   print("clust$merge:")
+   print(clust$merge)
+   print("clust$height:")
+   print(clust$height)
+   print("clust$order")
+   print(clust$order)
+   print("clust$labels")
+   print(clust$labels)
+   sink()
+   write.table(cutree(clust, 1:dim(datamatrix)[2]),file="heatmap_sample_clusters.txt",row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
 }
 
 
@@ -277,7 +297,7 @@ draw_zipfian_plots <- function(datalist, output_folder, zipfian_plot_image_file,
    jpeg(filename = zipfian_plot_image_file, plot_width, plot_height)
    par(mfrow=c(plot_rows, zipfian_plots_per_row))
    for (i in sequence(ncol(datalist$log_rank_data))) {
-      plot(datalist$log_rank_data[,i], datalist$entropy_data[,i],pch='.',main=colnames(datalist$log_rank_data)[i])
+      plot(datalist$log_rank_data[,i], datalist$entropy_data[,i],pch='.',main=colnames(datalist$log_rank_data)[i],xlim=c(0,12), ylim=c(8,14))
    }
    dev.off()
 }
