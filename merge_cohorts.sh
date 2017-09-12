@@ -74,6 +74,21 @@ function echo_opts() {
     echo "run to merge : $RUN"
 }
 
+function safe_link() {
+   # since this script is called after (re)running any or all lanes, 
+   # then when called after a lane has been re-run , the code can get confused and
+   # circular links created. 
+   # this function checks for and does not create circular links
+   real=$1
+   link=$2
+   p=`dirname $link` 
+   r=`readlink $link`
+   if [ $p == $r ]; then
+      echo "ignoring request to ln -s $real $link as this is circular"
+   else
+      ln -s $real $link 
+   fi
+}
 
 
 function merge_cohorts() {
@@ -96,7 +111,7 @@ function merge_cohorts() {
       cohort_folder=$1
       for file_or_folder in $cohort_folder/*; do
          base=`basename $file_or_folder`
-         ln -s $file_or_folder $merge_folder/$base
+         safe_link $file_or_folder $merge_folder/$base
       done
    else
       # some initial clean-ups in case we are running this multiple times 
@@ -117,7 +132,7 @@ function merge_cohorts() {
          for suffix in .out .se ; do
             for filename in $cohort_folder/*${suffix} ; do
                base=`basename $filename $suffix`
-               ln -s $filename $merge_folder/${base}_${cohort_moniker}${suffix}
+               safe_link $filename $merge_folder/${base}_${cohort_moniker}${suffix}
             done
          done
 
@@ -136,7 +151,7 @@ function merge_cohorts() {
          for suffix in .png .csv .pdf .stdout ; do
             for filename in $cohort_folder/KGD/*${suffix} ; do
                base=`basename $filename $suffix`
-               ln -s $filename $merge_folder/KGD/${base}_${cohort_moniker}${suffix}
+               safe_link $filename $merge_folder/KGD/${base}_${cohort_moniker}${suffix}
             done
          done
          set -x
@@ -148,7 +163,7 @@ function merge_cohorts() {
 
          # link hapMap tagsByTaxa Illumina  mapInfo key mergedTagCounts  tagPair 
          for subfolder in hapMap tagsByTaxa Illumina  mapInfo key mergedTagCounts  tagPair ; do
-            ln -s $cohort_folder/$subfolder $merge_folder/${subfolder}_${cohort_moniker}
+            safe_link $cohort_folder/$subfolder $merge_folder/${subfolder}_${cohort_moniker}
          done
       
          shift

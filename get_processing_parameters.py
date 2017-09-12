@@ -24,7 +24,7 @@ def get_csv_dict(filename, key_column_name, value_column_name, min_field_count =
             try:
                 headings = [item.upper() for item in csvreader.next()]
             except StopIteration:
-                raise Exception("get_csv_dict: could not find %s in %s"%(key_column_name, filename))
+                raise Exception("get_csv_dict: could not find either %s or %s in %s"%(key_column_name, value_column_name , filename))
                         
         if value_column_name.upper() not in headings:
             raise Exception("error - %s not found in %s"%(value_column_name.upper() , filename))

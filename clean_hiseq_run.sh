@@ -3,14 +3,14 @@
 function get_opts() {
 DRY_RUN=no
 RUN_ROOT=/dataset/hiseq/active
-ARCHIVE_ROOT=/dataset/hiseq/archive/run_archives
+ARCHIVE_ROOT=/dataset/hiseq_archive_1/archive/run_archives
 SCRATCH_ROOT=/dataset/hiseq/scratch/postprocessing
 help_text="
  examples : \n
  ./clean_hiseq_run.sh -n -r 141122_D00390_0212_AC5MUKANXX\n
 "
 
-while getopts ":nhr:" opt; do
+while getopts ":nhr:A:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
@@ -21,6 +21,9 @@ while getopts ":nhr:" opt; do
       ;;
     r)
       RUN=$OPTARG
+      ;;
+    A)
+      ARCHIVE_ROOT=$OPTARG
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2

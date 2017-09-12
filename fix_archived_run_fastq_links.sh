@@ -13,8 +13,15 @@ help_text="
 DRY_RUN=no
 MACHINE=hiseq
 VERIFY="no"
+HISEQ_ROOT=/dataset/${MACHINE}/active
+#ARCHIVE_ROOT=/dataset/${MACHINE}/archive/run_archives
+#ARCHIVE_ROOT=/bifo/archive/${MACHINE}/run_archives
+ARCHIVE_ROOT=/dataset/hiseq_archive_1/archive/run_archives 
+LINK_FARM=/dataset/hiseq/active/fastq-link-farm
+export GBS_BIN
 
-while getopts ":nhvr:f:" opt; do
+
+while getopts ":nhvr:f:A:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
@@ -27,6 +34,9 @@ while getopts ":nhvr:f:" opt; do
       ;;
     f)
       FCID=$OPTARG
+      ;;
+    A)
+      ARCHIVE_ROOT=$OPTARG
       ;;
     h)
       echo -e $help_text
@@ -43,11 +53,6 @@ while getopts ":nhvr:f:" opt; do
   esac
 done
 
-HISEQ_ROOT=/dataset/${MACHINE}/active
-#ARCHIVE_ROOT=/dataset/${MACHINE}/archive/run_archives
-ARCHIVE_ROOT=/bifo/archive/${MACHINE}/run_archives
-LINK_FARM=/dataset/hiseq/active/fastq-link-farm
-export GBS_BIN
 }
 
 function check_opts() {
@@ -114,8 +119,9 @@ function fix_links() {
  
             # check that we established the new link
             target_now=`readlink -m $seqlink`
-            if [ "$target_now" != "$new_target" ]; then
-               echo "!!!!! WARNING the target of the link is now $target_now but it should be $new_target - check integrity of relinking !!!!! "
+            new_target_real=`readlink -m $new_target`
+            if [ "$target_now" != "$new_target_real" ]; then
+               echo "!!!!! WARNING the target of the link is now $target_now but it should be $new_target_real - check integrity of relinking !!!!! "
             fi
 
             # check contents are the same if asked to

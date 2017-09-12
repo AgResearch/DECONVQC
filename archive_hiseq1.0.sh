@@ -5,7 +5,8 @@ function get_opts() {
 
 DRY_RUN=no
 RUN_ROOT=/dataset/hiseq/active
-ARCHIVE_ROOT=/dataset/hiseq/archive/run_archives
+#ARCHIVE_ROOT=/dataset/hiseq/archive/run_archives
+ARCHIVE_ROOT=/dataset/hiseq_archive_1/archive/run_archives
 help_text="
  examples : \n
  ./archive_hiseq1.0.sh -n -r 140127_D00390_0027_AH88H8ADXX \n
