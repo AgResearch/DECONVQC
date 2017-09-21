@@ -48,3 +48,21 @@ where not exists (
    flowcell = g.flowcell and
    lane = g.lane );
 */
+
+/* the sampleid's in the yield_import_temp may sometimes be
+fuzzy matched better , like this : 
+
+update gbs_yield_import_temp
+set
+   sampleid =  substr(seqid, 1, strpos(seqid, flowcell)-2),
+   matched = -2
+where
+   matched = 0 and 
+   strpos(seqid, flowcell) > 2;
+
+- e.g. see run 170915_D00000_0001_EXTERNALXX
+
+may need to include this kind of matching for all runs 
+(this one was done manually in order to get the yield 
+stats to appear)
+*/
