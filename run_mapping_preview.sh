@@ -95,52 +95,45 @@ for sample_trimmed_file in `cat ${RUN_ROOT}/lof.txt`; do
    REF_GENOME=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
    alignment_parameters=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_parameters`
    sample_trimmed_moniker=${sample_name}.sample.fastq.trimmed
-   if [ ! -z $REF_GENOME ]; then
-      if [ ! -f ${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then 
-         echo "queuing $sample_trimmed_file"
-         REF_GENOME_MONIKER=`basename $REF_GENOME`
-         if [ $DRY_RUN == "yes" ]; then
-            echo "*** dry run only ***"
+   if [ ! -f ${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then 
+      echo "queuing $sample_trimmed_file"
+      REF_GENOME_MONIKER=`basename $REF_GENOME`
+      if [ $DRY_RUN == "yes" ]; then
+         echo "*** dry run only ***"
+         if [ ! -z $REF_GENOME ]; then 
             echo "nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & "
-         else 
-            nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & 
-            let launched_count=$launched_count+1
-            echo $sample_trimmed_file >> $launched_list
-
-
-            # if we have launched BATCHSIZE, or all of them, wait for this batch to complete
-            let modcount=${launched_count}%$BATCHSIZE
-            if [[ (  $modcount == 0 ) || (  ${launched_count} == $sample_count ) ]]; then
-               for sample_trimmed_file in `cat $launched_list`; do
-                  sample_name=`basename $sample_trimmed_file .list.sample.fastq.trimmed.gz`
-                  batonfile=${WORKING_FOLDER}/${sample_name}.bwa.baton
-                  sample_trimmed_moniker=${sample_name}.sample.fastq.trimmed
-                  REF_GENOME=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
-                  if [  ! -z $REF_GENOME ]; then
-                     REF_GENOME_MONIKER=`basename $REF_GENOME`
-                     echo "waiting for $batonfile"
-                     while [ ! -f $batonfile ]; do  
-                        sleep 180 
-                    done
-                  fi
-                  # summarise the alignment  
-                  rm -f $batonfile
-                  if [ -f $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then
-                     bamtools stats -in $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam > $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.stats
-                  fi
-               done
-               launched_list=`mktemp`
-            fi
          fi
-      else
-         echo "skipping $sample_name (already done)"
-         # increment launched count though so we know when done
+      else 
+         if [ ! -z $REF_GENOME ]; then
+            nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & 
+         fi
          let launched_count=$launched_count+1
+         echo $sample_trimmed_file >> $launched_list
+
+         # if we have launched BATCHSIZE, or all of them, wait for this batch to complete
+         let modcount=${launched_count}%$BATCHSIZE
+         if [[ (  $modcount == 0 ) || (  ${launched_count} == $sample_count ) ]]; then
+            for sample_trimmed_file in `cat $launched_list`; do
+               sample_name=`basename $sample_trimmed_file .list.sample.fastq.trimmed.gz`
+               batonfile=${WORKING_FOLDER}/${sample_name}.bwa.baton
+               sample_trimmed_moniker=${sample_name}.sample.fastq.trimmed
+               REF_GENOME=`$GBS_BIN/get_processing_parameters.py --parameter_file ${PARAMETERS_FILE} --parameter_name bwa_alignment_reference  --sample $sample_name`
+               if [ ! -z $REF_GENOME ]; then
+                  REF_GENOME_MONIKER=`basename $REF_GENOME`
+                  echo "waiting for $batonfile"
+                  while [ ! -f $batonfile ]; do  
+                     sleep 180 
+                  done
+               fi
+               # summarise the alignment  
+               rm -f $batonfile
+               if [ -f $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam ]; then
+                  bamtools stats -in $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam > $WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.stats
+               fi
+            done
+            launched_list=`mktemp`
+         fi
       fi
-   else
-      echo "skipping $sample_name (no reference specified)"
-      # increment launched count though so we know when done
-      let launched_count=$launched_count+1
    fi
 done
 
