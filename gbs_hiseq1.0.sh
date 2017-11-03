@@ -11,7 +11,8 @@ help_text="
  ./gbs_hiseq1.0.sh -i -n -r 150925_D00390_0235_BC6K0YANXX\n
  ./gbs_hiseq1.0.sh -i -n -t db_update -r 151124_D00390_0240_AC88WPANXX\n
  ./gbs_hiseq1.0.sh -i -n -t annotation -r 151124_D00390_0240_AC88WPANXX\n
- ./gbs_hiseq1.0.sh -i -r 161005_D00390_0268_AC9NRJANXX -s SQ2592\n
+ ./gbs_hiseq1.0.sh -i -r 161005_D00390_0268_AC9NRJANXX -s SQ2592,SQ2593\n
+ ./gbs_hiseq1.0.sh -i -t db_update -r 171026_M02412_0043_000000000-D2N2U -m miseq \n
 "
 
 DRY_RUN=no
@@ -58,6 +59,10 @@ done
 
 HISEQ_ROOT=/dataset/${MACHINE}/active
 BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
+
+CANONICAL_HISEQ_ROOT=/dataset/hiseq/active
+CANONICAL_BUILD_ROOT=/dataset/hiseq/scratch/postprocessing
+
 }
 
 
@@ -84,6 +89,22 @@ if [[ ( $MACHINE != "hiseq" ) && ( $MACHINE != "miseq" ) ]]; then
     echo "machine must be miseq or hiseq"
     exit 1
 fi
+
+# if the machine is miseq , there needs to be a shortcut under the hiseq
+# folder pointing to it.
+if [ $MACHINE == "miseq" ]; then
+   if [ ! -h $CANONICAL_HISEQ_ROOT/$RUN ] ; then
+      echo "error could not find $CANONICAL_HISEQ_ROOT/$RUN "
+      exit 1
+   elif [ ! -d $CANONICAL_BUILD_ROOT/${RUN}.processed ]; then 
+      echo "error could not find $CANONICAL_BUILD_ROOT/${RUN}.processed"
+      exit 1
+   else
+      HISEQ_ROOT=$CANONICAL_HISEQ_ROOT
+      BUILD_ROOT=$CANONICAL_BUILD_ROOT
+   fi
+fi
+
 
 }
 
@@ -177,12 +198,15 @@ function get_targets() {
          done
       done
    else
-      sample_monikers=$SAMPLE
-      sample_targets=$my_run_root/${SAMPLE}.processed_sample
-      mkdir -p $RUN_TEMP/${sample_monikers}/uneak_cohorts
-      cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_monikers`
-      for cohort in $cohorts; do
-         echo "" > $RUN_TEMP/${sample_monikers}/uneak_cohorts/$cohort
+      sample_monikers=`echo $SAMPLE | sed 's/,/ /g' -`
+      sample_targets=""
+      for sample_moniker in $sample_monikers; do
+         sample_targets="$sample_targets $my_run_root/${sample_moniker}.processed_sample"
+         mkdir -p $RUN_TEMP/${sample_moniker}/uneak_cohorts
+         cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_moniker`
+         for cohort in $cohorts; do
+            echo "" > $RUN_TEMP/${sample_moniker}/uneak_cohorts/$cohort
+         done
       done
    fi
 
@@ -207,9 +231,9 @@ function add_run() {
    echo "** adding Run **"
    set -x
    if [ $DRY_RUN == "no" ]; then
-      $GBS_BIN/database/addRun.sh -r $RUN
+      $GBS_BIN/database/addRun.sh -r $RUN -m $MACHINE
    else
-      $GBS_BIN/database/addRun.sh -n -r $RUN
+      $GBS_BIN/database/addRun.sh -n -r $RUN -m $MACHINE
    fi
 }
 

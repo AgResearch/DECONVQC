@@ -12,12 +12,14 @@ help_text="\n
       usage : addRun.sh -r run_name\n
       example (dry run) : ./addRun.sh -n -r 151016_D00390_0236_AC6JURANXX\n
       example           : ./addRun.sh -r 151016_D00390_0236_AC6JURANXX\n
+      example           : ./addRun.sh -r 171026_M02412_0043_000000000-D2N2Ua -m miseq
 "
 
 DRY_RUN=no
 RUN_NAME=""
+MACHINE=hiseq
 
-while getopts ":nhr:" opt; do
+while getopts ":nhr:m:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
@@ -27,6 +29,9 @@ while getopts ":nhr:" opt; do
       ;;
     r)
       RUN_NAME=$OPTARG
+      ;;
+    m)
+      MACHINE=$OPTARG
       ;;
     h)
       echo -e $help_text
@@ -44,7 +49,8 @@ while getopts ":nhr:" opt; do
 done
 
 KEY_DIR=/dataset/hiseq/active/key-files
-RUN_PATH=/dataset/hiseq/active/$RUN_NAME
+RUN_PATH=/dataset/${MACHINE}/active/$RUN_NAME
+CANONICAL_RUN_PATH=/dataset/hiseq/active/$RUN_NAME
 }
 
 function check_opts() {
@@ -62,15 +68,29 @@ if [ ! -d $RUN_PATH ]; then
    echo $RUN_PATH not found
    exit 1
 fi
+
+if [ ! -h $CANONICAL_RUN_PATH ]; then
+   echo error , shortcut $CANONICAL_RUN_PATH not found
+   exit 1
+fi
+
 if [ ! -f $RUN_PATH/SampleSheet.csv ]; then
    echo $RUN_PATH/SampleSheet.csv not found
    exit 1
 fi
+
 in_db=`$GBS_BIN/database/is_run_in_database.sh $RUN_NAME`
 if [ $in_db != "0" ]; then
    echo "$RUN_NAME has already been added - quitting"
    exit 1 
 fi
+
+# machine must be miseq or hiseq
+if [[ ( $MACHINE != "hiseq" ) && ( $MACHINE != "miseq" ) ]]; then
+    echo "machine must be miseq or hiseq"
+    exit 1
+fi
+
 }
 
 function echo_opts() {
@@ -101,7 +121,9 @@ fi
 # parse the sample sheet
 #cp $RUN_ROOT/${RUN_NAME}/SampleSheet.csv /tmp/${RUN_NAME}.txt
 #awk -F, '{if(NF>5)print}' ${RUN_PATH}/SampleSheet.csv  > /tmp/${RUN_NAME}.txt
+set -x
 cat ${RUN_PATH}/SampleSheet.csv | $GBS_BIN/database/sanitiseSampleSheet.py -r $RUN_NAME > /tmp/${RUN_NAME}.txt
+set +x
 
 # check we got something non-trivial
 if [ ! -s /tmp/${RUN_NAME}.txt ]; then

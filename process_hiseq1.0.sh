@@ -13,6 +13,7 @@ help_text="
  examples : \n
  ./process_hiseq1.0.sh -i -n -r 150515_D00390_0227_BC6JPMANXX \n
  ./process_hiseq1.0.sh -i -r 150515_D00390_0227_BC6JPMANXX \n
+ ./process_hiseq1.0.sh -i -m miseq -r 171026_M02412_0043_000000000-D2N2U \n
 "
 
 DRY_RUN=no
@@ -56,6 +57,9 @@ done
 HISEQ_ROOT=/dataset/${MACHINE}/active
 BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
 
+CANONICAL_HISEQ_ROOT=/dataset/hiseq/active
+CANONICAL_BUILD_ROOT=/dataset/hiseq/scratch/postprocessing
+
 }
 
 
@@ -76,6 +80,20 @@ if [[ ( $MACHINE != "hiseq" ) && ( $MACHINE != "miseq" ) ]]; then
     echo "machine must be miseq or hiseq"
     exit 1
 fi
+
+
+# if the machine is miseq , there needs to be a shortcut under the hiseq
+# folder pointing to it. 
+if [ $MACHINE == "miseq" ]; then
+   if [ ! -h $CANONICAL_HISEQ_ROOT/$RUN ] ; then
+      echo "please ln -s $HISEQ_ROOT/$RUN $CANONICAL_HISEQ_ROOT/$RUN "
+      exit 1
+   else
+      HISEQ_ROOT=$CANONICAL_HISEQ_ROOT
+      BUILD_ROOT=$CANONICAL_BUILD_ROOT
+   fi 
+fi
+
 
 }
 

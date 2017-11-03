@@ -12,8 +12,9 @@ Example :
 
 DRY_RUN=no
 INTERACTIVE=no
+MACHINE=hiseq
 
-while getopts ":nhr:s:k:f:l:" opt; do
+while getopts ":nhr:s:k:f:l:m:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
@@ -29,6 +30,9 @@ while getopts ":nhr:s:k:f:l:" opt; do
       ;;
     f)
       FLOWCELL_NAME=$OPTARG
+      ;;
+    m)
+      MACHINE=$OPTARG
       ;;
     l)
       LANE=$OPTARG
@@ -49,7 +53,7 @@ while getopts ":nhr:s:k:f:l:" opt; do
 done
 
 KEY_DIR=/dataset/hiseq/active/key-files
-PROCESSED_ROOT=/dataset/hiseq/scratch/postprocessing/${RUN_NAME}.processed
+PROCESSED_ROOT=/dataset/${MACHINE}/scratch/postprocessing/${RUN_NAME}.processed
 LINK_FARM_ROOT=/dataset/hiseq/active/fastq-link-farm
 }
 
@@ -88,6 +92,12 @@ function check_opts() {
       echo "$PROCESSED_ROOT not found"
       exit 1
    fi
+
+   if [[ ( $MACHINE != "hiseq" ) && ( $MACHINE != "miseq" ) ]]; then
+      echo "machine must be miseq or hiseq"
+      exit 1
+   fi
+
 }
 
 
