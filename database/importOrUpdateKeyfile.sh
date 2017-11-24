@@ -79,6 +79,8 @@ function check_opts() {
 check_file_format() {
    set -x
 
+   sanitised_file=$1   # this should be ordered correctly
+
    # check if file has fastq_link column
    fastq_copy_include=""
    head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i fastq_link > /dev/null

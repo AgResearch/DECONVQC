@@ -69,8 +69,8 @@ if [ ! -d $RUN_PATH ]; then
    exit 1
 fi
 
-if [ ! -h $CANONICAL_RUN_PATH ]; then
-   echo error , shortcut $CANONICAL_RUN_PATH not found
+if [[ ( $MACHINE == "miseq" ) && ( ! -h $CANONICAL_RUN_PATH ) ]]; then
+   echo error , miseq run and shortcut $CANONICAL_RUN_PATH not found
    exit 1
 fi
 
