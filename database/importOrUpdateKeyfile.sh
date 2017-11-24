@@ -79,8 +79,6 @@ function check_opts() {
 check_file_format() {
    set -x
 
-   sanitised_file=$1   # this should be ordered correctly
-
    # check if file has fastq_link column
    fastq_copy_include=""
    head -1 $KEY_DIR/$KEYFILE_BASE.txt | grep -i fastq_link > /dev/null
@@ -178,7 +176,12 @@ if [ -f /tmp/$KEYFILE_BASE.psql ]; then
 fi
 
 cat $KEY_DIR/$KEYFILE_BASE.txt | iconv -c -t UTF8 | $GBS_BIN/database/sanitiseKeyFile.py > /tmp/$KEYFILE_BASE.txt
-
+if [ $? != 0 ]; then
+   echo "Error looks like a malformed keyfile $KEY_DIR/$KEYFILE_BASE.txt ,this failed : 
+   cat $KEY_DIR/$KEYFILE_BASE.txt | iconv -c -t UTF8 | $GBS_BIN/database/sanitiseKeyFile.py
+   "
+   exit 1
+fi
 
 if [ $ACTION == "insert" ]; then
 
