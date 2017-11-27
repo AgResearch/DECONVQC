@@ -48,13 +48,14 @@ function check_opts() {
          exit 1
       fi
       TASK=remove_active
-   elif [ $HOSTNAME == "granaspp02.agresearch.co.nz" ]; then
-      REPLICA_FILESYSTEM=z202/replica/z102/active/hiseq/$RUN
-      RUN_MOUNT=/export/z202/replica/z102/active/hiseq/$RUN
-      if [ ! -d "$RUN_MOUNT" ]; then
-         echo "error can't find $RUN_MOUNT"
-         exit 1
-      fi
+   elif [ $HOSTNAME == "granaspp01.agresearch.co.nz" ]; then
+      REPLICA_FILESYSTEM=z301/replica/z102/active/hiseq/$RUN
+      # no longer mounted
+      #RUN_MOUNT=/export/z202/replica/z102/active/hiseq/$RUN
+      #if [ ! -d "$RUN_MOUNT" ]; then
+      #   echo "error can't find $RUN_MOUNT"
+      #   exit 1
+      #fi
       TASK=remove_replica
    elif [ $HOSTNAME == "inbfop03.agresearch.co.nz" ]; then
       TASK="link_archive_clean_scratch"
@@ -101,7 +102,7 @@ i.e.
       fi
    elif  [ $TASK == "remove_replica" ]; then
       echo "will execute:
-zfs destroy -r z202/replica/z102/active/hiseq/$RUN 
+zfs destroy -r $REPLICA_FILESYSTEM 
 "
       if [ $DRY_RUN == "yes" ]; then
          echo " *** (dry run only ! - not done) ***"
@@ -115,7 +116,7 @@ zfs destroy -r z202/replica/z102/active/hiseq/$RUN
          else
             echo "executing above..."
             set -x
-            zfs destroy -r z202/replica/z102/active/hiseq/$RUN
+            zfs destroy -r $REPLICA_FILESYSTEM
             set +x
          fi
       fi
