@@ -75,8 +75,7 @@ if [ ! -d ${WORKING_FOLDER} ]; then
    exit 1
 fi
 
-#cd $GBS_BIN
-if [ ! -f .tardishrc ]; then 
+cd ${WORKING_FOLDER}
    echo "
 [tardish]
 Rport=5555

@@ -17,7 +17,7 @@ import string
 #Flowcell,Lane,Barcode,Sample,PlateName,PlateRow,PlateColumn,LibraryPrepID,counter,Comment,Enzyme,Species,NumberOfBarcodes,bifo,control,windowsize,gbscohort,fastq
 
 # the following are optional
-#counter,bifo,control,windowsize,gbscohort,fastq_copy_include
+#counter,bifo,control,windowsize,gbscohort,fastq
 
 # set up array of field descriptors in correct order. An array of tuples which contain
 # (regexp to (uniquely) find field , optional True or False)

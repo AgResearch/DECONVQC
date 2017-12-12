@@ -46,6 +46,9 @@ done
 HISEQ_ROOT=/dataset/${MACHINE}/active
 BUILD_ROOT=/dataset/${MACHINE}/scratch/postprocessing
 
+CANONICAL_HISEQ_ROOT=/dataset/hiseq/active
+CANONICAL_BUILD_ROOT=/dataset/hiseq/scratch/postprocessing
+
 }
 
 
@@ -59,6 +62,19 @@ fi
 if [ -z "$RUN" ]; then 
    echo "must specify a run (-r RUN )"
    exit 1
+fi
+
+if [ $MACHINE == "miseq" ]; then
+   if [ ! -h $CANONICAL_HISEQ_ROOT/$RUN ] ; then
+      echo "error could not find $CANONICAL_HISEQ_ROOT/$RUN "
+      exit 1
+   elif [ ! -d $CANONICAL_BUILD_ROOT/${RUN}.processed ]; then
+      echo "error could not find $CANONICAL_BUILD_ROOT/${RUN}.processed"
+      exit 1
+   else
+      HISEQ_ROOT=$CANONICAL_HISEQ_ROOT
+      BUILD_ROOT=$CANONICAL_BUILD_ROOT
+   fi
 fi
 
 # check results folder exists  

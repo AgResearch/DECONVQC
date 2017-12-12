@@ -37,7 +37,8 @@ for summary in "frequency" "information" ; do
    $GBS_BIN/summarise_global_hiseq_taxonomy.py -t $summary  -o $outfile -x nohit $runs  # excluding no hits 
 
    # make kingdom-specific files as well
-   for kingdom in "eukaryota" "bacteria"; do
+   #for kingdom in "eukaryota" "bacteria"; do
+   for kingdom in "eukaryota" ; do
       outfile=$BUILD_ROOT/${kingdom}_${summary}.txt
       $GBS_BIN/summarise_global_hiseq_taxonomy.py -s $kingdom -t $summary  -o $outfile $runs
       outfile=$BUILD_ROOT/${kingdom}_${summary}_xnohit.txt

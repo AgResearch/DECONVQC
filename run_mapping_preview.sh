@@ -9,7 +9,8 @@ if [ -z "$1" ]; then
    exit 1
 fi
 
-module load samtools
+#module load samtools
+module load samtools14_env 
 
 RUN=$1
 WORKING_FOLDER=$2
@@ -54,11 +55,16 @@ if [ ! -d ${WORKING_FOLDER} ]; then
    exit 1
 fi
 
-cd $GBS_BIN
-if [ ! -f .tardishrc ]; then 
-   echo "error - tardis config file .tardishrc is missing. "
-   exit 1
-fi
+#cd $GBS_BIN
+#if [ ! -f .tardishrc ]; then 
+#   echo "error - tardis config file .tardishrc is missing. "
+#   exit 1
+#fi
+cd $WORKING_FOLDER
+echo """
+[tardis_engine]
+max_processes=5
+""" > .tardishrc
 
 
 function get_files_by_size() {
@@ -101,11 +107,11 @@ for sample_trimmed_file in `cat ${RUN_ROOT}/lof.txt`; do
       if [ $DRY_RUN == "yes" ]; then
          echo "*** dry run only ***"
          if [ ! -z $REF_GENOME ]; then 
-            echo "nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & "
+            echo "nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam  & "
          fi
       else 
          if [ ! -z $REF_GENOME ]; then
-            nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}  & 
+            nohup tardis.py -w -k -c 200 -hpctype $HPC_RESOURCE -d $WORKING_FOLDER/$sample_name -batonfile $batonfile bwa aln $alignment_parameters $REF_GENOME _condition_fastq_input_$sample_trimmed_file \> _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai \; bwa samse $REF_GENOME _condition_throughput_${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.sai _condition_fastq_input_$sample_trimmed_file  \> _condition_sam_output_$WORKING_FOLDER/${sample_trimmed_moniker}_vs_${REF_GENOME_MONIKER}.bam  & 
          fi
          let launched_count=$launched_count+1
          echo $sample_trimmed_file >> $launched_list
