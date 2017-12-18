@@ -91,7 +91,6 @@ shell_template_name=condor_shell
 max_processes=5
 hpctype=condor
 " > .tardishrc
-fi
 
 if [ ! -f $PARAMETERS_FILE ]; then
    echo "$PARAMETERS_FILE missing - please run get_processing_parameters.py (for help , ./get_processing_parameters.py -h)"

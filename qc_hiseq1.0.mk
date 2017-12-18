@@ -181,7 +181,7 @@ versions.log:
 ##############################################
 # specify the intermediate files to keep 
 ##############################################
-.PRECIOUS:  %.processed %.processed/taxonomy_analysis %.processed/taxonomy_analysis_in_progress %.processed/fastqc_analysis %.processed/fastqc_analysis_in_progress %.processed/bcl2fastq %.processed/mapping_preview %.processed/mapping_preview_in_progress
+.PRECIOUS:  %.processed %.processed/taxonomy_analysis %.processed/taxonomy_analysis_in_progress %.processed/fastqc_analysis %.processed/fastqc_analysis_in_progress %.processed/bcl2fastq %.processed/mapping_preview %.processed/mapping_preview_in_progress %.processed/kmer_analysis %.processed/kmer_analysis_in_progress
 
 ##############################################
 # cleaning - not yet doing this using make  
