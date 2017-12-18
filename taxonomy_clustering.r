@@ -71,36 +71,134 @@ get_clusters <- function(datamatrix) {
    return(results)
 }
 
-run_name<-get_command_args()
+
+stroverlap <- function(x1,y1,s1, x2,y2,s2) {
+   # ref : https://stackoverflow.com/questions/6234335/finding-the-bounding-box-of-plotted-text
+   # example : stroverlap(.5,.5,"word", .6,.5, "word")
+   sh1 <- strheight(s1)
+   sw1 <- strwidth(s1)
+   sh2 <- strheight(s2)
+   sw2 <- strwidth(s2)
+
+   overlap <- FALSE
+   if (x1<x2) 
+     overlap <- x1 + sw1 > x2
+   else
+     overlap <- x2 + sw2 > x1
+
+   if (y1<y2) 
+     overlap <- overlap && (y1 +sh1>y2)
+   else
+     overlap <- overlap && (y2+sh2>y1)
+
+   return(overlap)
+}
+
+plot_data<-function(filename, plot_title, save_prefix, cex_label) {
+   datamatrix<-read.table(filename, header=TRUE, row.names=1, sep="\t")
+   clusters=get_clusters(datamatrix)
+   #plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
+   plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
+
+   clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
+   title(plot_title, cex.main=1.5)
+
+   # this next block of code is to do with avoiding over-plotting the labels
+   #text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
+   #print(clusters$fit$points)
+   #print(length( clusters$sample_names ))
+
+   # we will look for label overlaps , and form the overlapping labels into groups, 
+   # and label each group with just one of the labels. Then we will also
+   # put up a key in the top left, with the definition of each group 
+   # (There will be some placements of labels which will still result in over-plotting,
+   # - can adjust the sensitivity/specificity of the overlap detection to handle this
+   # (and also tolerate some over-plotting) )
+   # this section defines the groups. . . . 
+   plot_group_labels = vector("list", 0) 
+   plot_group_pos = vector("list",0)
+   for(i in 1:length( clusters$sample_names )) {
+      if (! is.na(clusters$sample_names[i])) {
+         if( length( plot_group_labels ) == 0 ) {
+            plot_group_labels = c(plot_group_labels, clusters$sample_names[i])
+            plot_group_pos = c(plot_group_pos,"") # need to be careful extending lists, to contain something that is itself a list(else you will flatten the new member)
+            plot_group_pos[[length(plot_group_pos)]] = c( clusters$fit$points[i,1], clusters$fit$points[i,2] )
+         }
+         else {
+            assigned_to_group = FALSE
+            for(j in 1:length( plot_group_labels )) {
+               # if this label overlaps a plot group , append the name to the group, and we assigned this label to a group 
+               if(stroverlap( clusters$fit$points[i,1], clusters$fit$points[i,2] , clusters$sample_names[i],
+                  plot_group_pos[[j]][1], plot_group_pos[[j]][2], plot_group_labels[[j]] )) {
+                  plot_group_labels[[j]] = c( plot_group_labels[[j]] , clusters$sample_names[i]) 
+                  assigned_to_group = TRUE
+                  next   
+               }
+            } #for each plot group 
+            if( ! assigned_to_group ) {
+               # label did not overlap any groups so make a singleton for it
+               plot_group_labels = c(plot_group_labels, clusters$sample_names[i])
+               plot_group_pos = c(plot_group_pos,"") # need to be careful extending lists, to contain something that is itself a list(else you will flatten the new member)
+               plot_group_pos[[length(plot_group_pos)]] = c( clusters$fit$points[i,1], clusters$fit$points[i,2] )
+            } # not found 
+         } # plot group has been initialiased
+      } # if one of the labels we are to plot 
+   } # for each point
+   print(plot_group_labels)
+   print(plot_group_pos)
+                       
+
+   #for(i in 1:length( clusters$sample_names )) {
+   #   #print(clusters$fit$points[i])
+   #   #print(clusters$sample_names[i])
+   #   print(paste(clusters$fit$points[i,1], clusters$fit$points[i,2], clusters$sample_names[i]))
+   #   text(clusters$fit$points[i,1], y=clusters$fit$points[i,2], labels = clusters$sample_names[i], pos = 4, cex=cex_label)
+   #}
+
+   # label each "label-group" , with just one of the labels
+   for(i in 1:length( plot_group_labels )) {
+      if (length( plot_group_labels[[i]] ) ==1 ) {
+         text(plot_group_pos[[i]][1], y=plot_group_pos[[i]][2], labels = plot_group_labels[[i]][1], adj=c(0,.5), cex=cex_label)
+      }
+      else {
+         text(plot_group_pos[[i]][1], y=plot_group_pos[[i]][2], labels = paste(plot_group_labels[[i]][1], "(etc.)", sep=" "), adj=c(0,.5), cex=cex_label)
+      }
+   }
+
+
+   # emit a key, defining the label groups (if there are any)
+   top_left=c( 1.02 * min( clusters$fit$points[,1] ) , .98 * max( clusters$fit$points[,2] ) )
+   key_row_count = 0
+   for(i in 1:length( plot_group_labels )) {
+      if (length( plot_group_labels[[i]] ) > 1 ) {
+         key_string = paste(plot_group_labels[[i]][1], "(etc.) also includes nearby samples:", sep=" ")
+         key_string = paste(key_string,  paste( plot_group_labels[[i]][2:length( plot_group_labels[[i]])], sep=","))
+         text(top_left[1] , y=top_left[2] - key_row_count * strheight(key_string) * 1.7, labels=key_string, cex=1.2, pos=4)
+         key_row_count = key_row_count + 1
+      }
+   }
+
+
+
+   write.table(clusters$fit$points,file=paste(save_prefix,run_name,".txt",sep=""),row.names=TRUE,sep="\t")
+}
+
+
+run_name<<-get_command_args()
+
+
+#jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
+
 
 jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 2400)
 par(mfrow=c(3, 1))
 
+cex_label=1.5   
+#cex_label=1.0   # this setting used for doing just one of the plots
+plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label)
+plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label)
+plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label)
 
-datamatrix<-read.table("eukaryota_information.txt", header=TRUE, row.names=1, sep="\t")
-clusters=get_clusters(datamatrix)
-plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
-clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
-title("Clustering of Blast Eukaryota-Hit Profiles", cex.main=1.5)
-text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
-write.table(clusters$fit$points,file=paste("Clustering-of-Blast-Eukaryota-Hit-Profiles-",run_name,".txt",sep=""),row.names=TRUE,sep="\t")
-
-
-datamatrix<-read.table("all_information.txt", header=TRUE, row.names=1, sep="\t")
-clusters=get_clusters(datamatrix)
-plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
-clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
-title("Clustering of Blast All-Hit Profiles", cex.main=1.5)
-text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
-write.table(clusters$fit$points,file=paste("Clustering-of-Blast-All-Hit-Profiles-",run_name,".txt",sep=""),row.names=TRUE,sep="\t")
-
-datamatrix<-read.table("all_information_xnohit.txt", header=TRUE, row.names=1, sep="\t")
-clusters=get_clusters(datamatrix)
-plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
-clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
-title("Clustering of Blast All-Hit Profiles (Excluding 'no hit')", cex.main=1.5)
-text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
-write.table(clusters$fit$points,file=paste("Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-",run_name,".txt",sep=""),row.names=TRUE,sep="\t")
 
 dev.off()
 
