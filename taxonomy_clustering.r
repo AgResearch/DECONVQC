@@ -36,7 +36,7 @@ get_clusters <- function(datamatrix) {
    sample_names <- strsplit(rownames(t(datamatrix)), split="_")
    get_name <- function(split_result) unlist(split_result)[5]
    sample_names <- sapply(sample_names, get_name) 
-
+  
    # look up the species in the sample-species table , using sample name as key
    get_species <- function(sample_name) as.vector(sample_species_table[sample_name, "species"])[1]
    species_names <- sapply(sample_names, get_species)
@@ -94,13 +94,32 @@ stroverlap <- function(x1,y1,s1, x2,y2,s2) {
    return(overlap)
 }
 
-plot_data<-function(filename, plot_title, save_prefix, cex_label) {
+plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missing) {
    datamatrix<-read.table(filename, header=TRUE, row.names=1, sep="\t")
    clusters=get_clusters(datamatrix)
-   #plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols)
-   plot.default(clusters$fit$points, col=clusters$point_colours, cex=1.5, pch=clusters$point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
 
-   clusters$sample_names[1:(length(clusters$sample_names)-8)]<-NA
+   if(exclude_missing) {
+      fit_points = subset(clusters$fit$points, ! is.na(clusters$point_colours))
+      point_symbols = subset(clusters$point_symbols, ! is.na(clusters$point_colours))
+      sample_names = subset(clusters$sample_names, ! is.na(clusters$point_colours))
+      point_colours = subset(clusters$point_colours, ! is.na(clusters$point_colours))
+   }
+   else {
+      fit_points = clusters$fit$points 
+      point_symbols = clusters$point_symbols
+      sample_names = clusters$sample_names
+      point_colours = clusters$point_colours
+   }
+
+   #print("symbols and colours")
+   #print(point_symbols)
+   #print(point_colours)
+
+   #plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols)
+   #plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
+   plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
+
+   sample_names[1:(length(sample_names)-8)]<-NA
    title(plot_title, cex.main=1.5)
 
    # this next block of code is to do with avoiding over-plotting the labels
@@ -117,29 +136,29 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label) {
    # this section defines the groups. . . . 
    plot_group_labels = vector("list", 0) 
    plot_group_pos = vector("list",0)
-   for(i in 1:length( clusters$sample_names )) {
-      if (! is.na(clusters$sample_names[i])) {
+   for(i in 1:length( sample_names )) {
+      if (! is.na(sample_names[i])) {
          if( length( plot_group_labels ) == 0 ) {
-            plot_group_labels = c(plot_group_labels, clusters$sample_names[i])
+            plot_group_labels = c(plot_group_labels, sample_names[i])
             plot_group_pos = c(plot_group_pos,"") # need to be careful extending lists, to contain something that is itself a list(else you will flatten the new member)
-            plot_group_pos[[length(plot_group_pos)]] = c( clusters$fit$points[i,1], clusters$fit$points[i,2] )
+            plot_group_pos[[length(plot_group_pos)]] = c( fit_points[i,1], fit_points[i,2] )
          }
          else {
             assigned_to_group = FALSE
             for(j in 1:length( plot_group_labels )) {
                # if this label overlaps a plot group , append the name to the group, and we assigned this label to a group 
-               if(stroverlap( clusters$fit$points[i,1], clusters$fit$points[i,2] , clusters$sample_names[i],
+               if(stroverlap( fit_points[i,1], fit_points[i,2] , sample_names[i],
                   plot_group_pos[[j]][1], plot_group_pos[[j]][2], plot_group_labels[[j]] )) {
-                  plot_group_labels[[j]] = c( plot_group_labels[[j]] , clusters$sample_names[i]) 
+                  plot_group_labels[[j]] = c( plot_group_labels[[j]] , sample_names[i]) 
                   assigned_to_group = TRUE
                   next   
                }
             } #for each plot group 
             if( ! assigned_to_group ) {
                # label did not overlap any groups so make a singleton for it
-               plot_group_labels = c(plot_group_labels, clusters$sample_names[i])
+               plot_group_labels = c(plot_group_labels, sample_names[i])
                plot_group_pos = c(plot_group_pos,"") # need to be careful extending lists, to contain something that is itself a list(else you will flatten the new member)
-               plot_group_pos[[length(plot_group_pos)]] = c( clusters$fit$points[i,1], clusters$fit$points[i,2] )
+               plot_group_pos[[length(plot_group_pos)]] = c( fit_points[i,1], fit_points[i,2] )
             } # not found 
          } # plot group has been initialiased
       } # if one of the labels we are to plot 
@@ -167,7 +186,7 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label) {
 
 
    # emit a key, defining the label groups (if there are any)
-   top_left=c( 1.02 * min( clusters$fit$points[,1] ) , .98 * max( clusters$fit$points[,2] ) )
+   top_left=c( 1.02 * min( fit_points[,1] ) , .98 * max( fit_points[,2] ) )
    key_row_count = 0
    for(i in 1:length( plot_group_labels )) {
       if (length( plot_group_labels[[i]] ) > 1 ) {
@@ -180,7 +199,7 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label) {
 
 
 
-   write.table(clusters$fit$points,file=paste(save_prefix,run_name,".txt",sep=""),row.names=TRUE,sep="\t")
+   write.table(fit_points,file=paste(save_prefix,run_name,".txt",sep=""),row.names=TRUE,sep="\t")
 }
 
 
@@ -195,9 +214,9 @@ par(mfrow=c(3, 1))
 
 cex_label=1.5   
 #cex_label=1.0   # this setting used for doing just one of the plots
-plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label)
-plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label)
-plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label)
+plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE)
+plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE)
+plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE)
 
 
 dev.off()
