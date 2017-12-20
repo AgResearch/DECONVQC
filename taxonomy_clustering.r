@@ -191,7 +191,7 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
    for(i in 1:length( plot_group_labels )) {
       if (length( plot_group_labels[[i]] ) > 1 ) {
          key_string = paste(plot_group_labels[[i]][1], "(etc.) also includes nearby samples:", sep=" ")
-         key_string = paste(key_string,  paste( plot_group_labels[[i]][2:length( plot_group_labels[[i]])], sep=","))
+         key_string = paste(key_string,  paste( plot_group_labels[[i]][2:length( plot_group_labels[[i]])], collapse=","))
          text(top_left[1] , y=top_left[2] - key_row_count * strheight(key_string) * 1.7, labels=key_string, cex=1.2, pos=4)
          key_row_count = key_row_count + 1
       }
@@ -209,16 +209,24 @@ run_name<<-get_command_args()
 #jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
 
 
-jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 2400)
-par(mfrow=c(3, 1))
+# these settings no longer used  - concatenate images outside this script not 
+#jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 2400)
+#par(mfrow=c(3, 1))
+#cex_label=1.5   
 
-cex_label=1.5   
-#cex_label=1.0   # this setting used for doing just one of the plots
+
+cex_label=1.0   # this setting used for doing just one of the plots
+jpeg(filename = paste("euk_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
 plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE)
-plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE)
-plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE)
-
-
 dev.off()
+
+jpeg(filename = paste("all_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
+plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE)
+dev.off()
+
+jpeg(filename = paste("xno_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
+plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE)
+dev.off()
+
 
 

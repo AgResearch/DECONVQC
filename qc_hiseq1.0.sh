@@ -238,7 +238,7 @@ for completed_run_landmark in $completed_run_landmarks; do
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql"
          echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
          echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
-         echo "convert taxonomy_clustering_171016_D00390_0331_ACBG8AANXX.jpg taxonomy_clustering_171214_D00390_0336_ACBG26ANXX.jpg read_summary_171214_D00390_0336_ACBG26ANXX.jpg -append result.jpg"
+         echo "convert $BUILD_ROOT/euk_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/all_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/xno_taxonomy_clustering_${RUN}.jpg  -append $BUILD_ROOT/taxonomy_clustering_${RUN}.jpg"
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
          echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
          echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
@@ -246,6 +246,7 @@ for completed_run_landmark in $completed_run_landmarks; do
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_sample_species.psql
          $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
          Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
+         convert $BUILD_ROOT/euk_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/all_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/xno_taxonomy_clustering_${RUN}.jpg  -append $BUILD_ROOT/taxonomy_clustering_${RUN}.jpg
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
          $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
          $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt

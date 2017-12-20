@@ -100,6 +100,8 @@ for record in sys.stdin:
       numcol = len(header_token_array)
       field_index = get_field_index(record)
    else:
+      if len(record.strip()) == 0:
+         continue
       #padded_token_array=get_padded_token_array(numcol, record)
       padded_token_array=get_canonicalised_token_array(field_index, len([item for item in field_index if item is not None]), record)
       if len(padded_token_array) > 0:
