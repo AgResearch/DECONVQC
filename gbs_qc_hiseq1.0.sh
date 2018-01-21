@@ -11,6 +11,7 @@ help_text="
  ./gbs_qc_hiseq1.0.sh -i -n -r 161216_D00390_0276_AC9PM8ANXX\n
  ./gbs_qc_hiseq1.0.sh -i -r 161216_D00390_0276_AC9PM8ANXX \n
  ./gbs_qc_hiseq1.0.sh -i -t kmer_analysis -r 161216_D00390_0276_AC9PM8ANXX \n
+ ./gbs_qc_hiseq1.0.sh -i -t annotation  -r 161216_D00390_0276_AC9PM8ANXX \n
  ./gbs_qc_hiseq1.0.sh -i -t blast_analysis -r 161216_D00390_0276_AC9PM8ANXX \n
  ./gbs_qc_hiseq1.0.sh  -n -s SQ0317 -t blast_analysis -i -r 170106_D00390_0279_BCA81DANXX \n
  ./gbs_qc_hiseq1.0.sh  -s SQ0317 -t blast_analysis -i -r 170106_D00390_0279_BCA81DANXX \n
@@ -70,7 +71,7 @@ if [ -z "$GBS_BIN" ]; then
 fi
 
 # check args
-if [[ ( $TASK != "qc" ) && ( $TASK != "blast_analysis" ) && ( $TASK != "kmer_analysis") ]]; then
+if [[ ( $TASK != "qc" ) && ( $TASK != "blast_analysis" ) && ( $TASK != "kmer_analysis")  && ( $TASK != "annotation") ]]; then
     echo "Invalid task name - must be qc , blast_analysis or kmer_analysis" 
     exit 1
 fi
@@ -256,12 +257,16 @@ for processed_run_folder in $processed_run_folders; do
       post_make
    else
       set -x
-      make -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
-      if [ $? == 0 ]; then
+      if [ $TASK == "annotation" ]; then
          post_make
       else
-         echo "(non-zero exit status from make - skipping post_make)"
-         exit 1
+         make -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
+         if [ $? == 0 ]; then
+            post_make
+         else
+            echo "(non-zero exit status from make - skipping post_make)"
+            exit 1
+         fi
       fi
    fi
 

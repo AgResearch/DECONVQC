@@ -24,7 +24,7 @@ import string
 global field_descriptors
 field_descriptors = [("(flow|fcid)",False),("lane",False),("^barcode",False),("sample", False),("platename", False),\
                      ("row",False),("column",False),("prep",False),("counter",True),("comment",False),("enzyme",False),\
-                     ("species",False),("numberofbar",False),("bifo",True),("control",True),("windowsize",True),\
+                     ("species",False),("number\s*of\s*bar",False),("bifo",True),("control",True),("window\s*size",True),\
                      ("cohort",True),("fastq",True)]
 
 
