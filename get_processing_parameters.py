@@ -99,6 +99,87 @@ def get_cohort(library_name, run_name):
     #return stdout.strip()
     return " ".join( [ item.strip() for item in re.split("\n",stdout.strip()) ] )
 
+
+
+def get_bwa_alignment_references(options):
+    """
+    see e.g. /dataset/hiseq/active/141217_D00390_0214_BC4UEHACXX/SampleProcessing.json
+    note that we get alignment references both by sampleid and also sample project - this handles
+    both GBS and non GBS outputs. (GBS projects have some "fake" sample projects added by the
+    downstream)
+    """
+    species_references_dict = get_csv_dict(options["species_references_file"],"species","reference genome")
+    try:
+        sample_sheet_dict = get_csv_dict(options["parameter_file"],"SampleID","Description", 5)
+    except:
+        sample_sheet_dict = get_csv_dict(options["parameter_file"],"Sample_ID","Description", 5)
+        
+    try:
+        sample_sheet_dict1 = get_csv_dict(options["parameter_file"],"SampleProject","Description", 5)
+    except:
+        sample_sheet_dict1 = get_csv_dict(options["parameter_file"],"Sample_Project","Description", 5)
+
+    #print "DEBUG1"
+    #print sample_sheet_dict
+    #print sample_sheet_dict1
+
+    sample_sheet_dict.update(sample_sheet_dict1)
+    #print "DEBUG2"    
+    #print sample_sheet_dict
+        
+        
+
+    #print "DEBUG"
+    #print sample_sheet_dict
+
+    # parse the run name from the parameter file - e.g. 
+    # from /dataset/hiseq/active/150506_D00390_0225_BC6K2RANXX/SampleSheet.csv, get 150506_D00390_0225_BC6K2RANXX
+    run_name = os.path.basename(os.path.dirname(options["parameter_file"]))
+
+
+    # find the nearest match of each sample description  in sample_sheet_dict, in key of species_references_dict
+    alignment_references = {}
+    
+    for sample in sample_sheet_dict:
+        # begin long-winded code to do a fuzzymatch on species , between sample-sheet and species-ref-file
+        best_reference = ''
+        species_score_dict  = dict([(key,0) for key in species_references_dict.keys()])
+        #print species_score_dict
+        sample_keywords = re.split("\s+", re.sub("GBS", " ", re.sub("_"," ", sample_sheet_dict[sample]))) 
+        for species in species_references_dict:
+            species_score_dict[species] = [re.search(key_word, species, re.IGNORECASE) for key_word in sample_keywords]
+            species_score_dict[species] = len([match for match in species_score_dict[species] if match is not None]) 
+        #print species_score_dict
+        sorted_species = species_score_dict.keys()
+        sorted_species.sort(lambda x,y:cmp(species_score_dict[x], species_score_dict[y]))
+        #print species_score_dict
+        #print sorted_species 
+        if species_score_dict[sorted_species[0]] < species_score_dict[sorted_species[-1]]:
+            best_reference = species_references_dict[sorted_species[-1]]
+   
+        if len(sample.strip()) > 2:
+            alignment_references[sample]  = best_reference
+
+
+    # try looking up the other way for unmatched samples
+    #print "DEBUG"
+    #print species_references_dict
+    for unmatched_sample in [ sample for sample in alignment_references if alignment_references[sample] == ''] :
+        for species in species_references_dict:
+            if len(species) > 1:
+                #print "DEBUG"
+                #print "matching " + species + " against " + sample_sheet_dict[unmatched_sample]
+                if re.search(species, sample_sheet_dict[unmatched_sample], re.IGNORECASE) is not None:
+                    alignment_references[unmatched_sample] = species_references_dict[species]
+                    break
+                
+
+     
+    return alignment_references
+
+    
+    
+
  
 def get_json(options):
     """
@@ -120,7 +201,8 @@ def get_json(options):
 
 
     # find the nearest match of each sample description  in sample_sheet_dict, in key of species_references_dict
-    alignment_references = {}
+    alignment_references = get_bwa_alignment_references(options)
+    
     cohorts = {}
     descriptions = open(options["parameter_file"],"r").read()
     try:
@@ -129,25 +211,7 @@ def get_json(options):
         downstream_processing = get_csv_dict( options["parameter_file"],"Sample_ID","downstream_processing" )
      
     for sample in sample_sheet_dict:
-        # begin long-winded code to do a fuzzymatch on species , between sample-sheet and species-ref-file
-        best_reference = ''
-        species_score_dict  = dict([(key,0) for key in species_references_dict.keys()])
-        #print species_score_dict
-        sample_keywords = re.split("\s+", re.sub("GBS", " ", re.sub("_"," ", sample_sheet_dict[sample]))) 
-        for species in species_references_dict:
-            species_score_dict[species] = [re.search(key_word, species, re.IGNORECASE) for key_word in sample_keywords]
-            species_score_dict[species] = len([match for match in species_score_dict[species] if match is not None]) 
-        #print species_score_dict
-        sorted_species = species_score_dict.keys()
-        sorted_species.sort(lambda x,y:cmp(species_score_dict[x], species_score_dict[y]))
-        #print species_score_dict
-        #print sorted_species 
-        if species_score_dict[sorted_species[0]] < species_score_dict[sorted_species[-1]]:
-            best_reference = species_references_dict[sorted_species[-1]]
-   
         if len(sample.strip()) > 2:
-            alignment_references[sample]  = best_reference
-            #print "debug2 sample=%s run=%s"%(sample, run_name)
             cohorts[sample] = get_cohort(sample, run_name)
 
     json_dict = {
