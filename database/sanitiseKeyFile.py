@@ -64,7 +64,7 @@ def get_canonicalised_token_array(field_index, num_fields, record):
          print "error short record %s - has %d fields expecting %d (i.e. %s)"%(record, len(tokens), num_fields, field_index)
          sys.exit(1)
 
-   token_array = [ tokens[field_index[j]] for j in range(0,len(field_index)) if field_index[j] is not None ]
+   token_array = [ ltrim(rtrim(tokens[field_index[j]])) for j in range(0,len(field_index)) if field_index[j] is not None ]
    return token_array
 
 def deprecated_get_padded_token_array(numcol, record):
