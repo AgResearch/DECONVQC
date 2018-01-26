@@ -4,25 +4,33 @@
 function get_opts() {
 
 help_text="\n
- this scripts extracts a keyfile from the database \n
+ this script extracts a (custom) keyfile from the database \n
 
- listKeyfile.sh -s sample_name  [-v Tassel version] [-t extract template]\n
+ Usage: \n
+
+ listDBKeyfile.sh [-s sample_name]  [-v client version (e.g. 5 for tassel 5 etc)] [-g gbs_cohort ] [-e enzyme [-t extract template] [ -f flowcell ]\n
 \n
- e.g.\n
- listDBKeyfile.sh -s SQ0032 \n
- listDBKeyfile.sh -s SQ0002 -t all \n
- listDBKeyfile.sh -s SQ0032 -v 5 \n
- listDBKeyfile.sh -s SQ2534 -v 5 -f C6K0YANXX \n
- listDBKeyfile.sh -s SQ0032 -e PstI \n
- listDBKeyfile.sh -s SQ0032 -e PstI -g deer \n
-
+e.g.\n
+listDBKeyfile.sh  -s SQ0566                  # extract everything for SQ0566, default tassel 3 format\n
+listDBKeyfile.sh  -s SQ0566 -v 5             # extract everything for SQ0566, default tassel 5 format\n
+listDBKeyfile.sh  -s SQ0566 -v 5 -t all      # extract everything for SQ0566, extended tassel 5 format (also include subject name)\n
+listDBKeyfile.sh  -s SQ0566 -t gbsx          # extract everything for SQ0566, GBSX format (only include sample, barcode, enzyme)\n
+listDBKeyfile.sh  -s SQ0566 -t files         # extract distinct lane + fastq file name for SQ0566 (e.g. to help build GBSX command)\n
+listDBKeyfile.sh  -g deer                    # extract everything that has gbs_cohort = deer (across all runs)\n
+listDBKeyfile.sh  -g deer -e PstI            # extract everything that has gbs_cohort = deer , and enzyme = PstI (across all runs)\n
+listDBKeyfile.sh  -t gbsx -g deer -e PstI    # as above, GBSX format\n
+listDBKeyfile.sh  -t files -g deer -e PstI   # as above, report lane + file\n
+listDBKeyfile.sh  -g deer  -f CA95UANXX      # all deer , but only in flowcell CA95UANXX\n
+listDBKeyfile.sh  -f CA95UANXX               # extract everything on flowcell CA95UANXX\n
+listDBKeyfile.sh                             # don't be greedy ! (extract entire keyfile database, ~ 200,000 records)\n
 "
 
-TASSEL_VERSION=3
+CLIENT_VERSION=3
 FLOWCELL=""
-TEMPLATE="default"
+TEMPLATE="default"  # tassel
 ENZYME=""
 GBS_COHORT=""
+SAMPLE=""
 
 while getopts ":nhv:s:k:c:f:t:e:g:" opt; do
   case $opt in
@@ -30,7 +38,7 @@ while getopts ":nhv:s:k:c:f:t:e:g:" opt; do
       SAMPLE=$OPTARG
       ;;
     v)
-      TASSEL_VERSION=$OPTARG
+      CLIENT_VERSION=$OPTARG
       ;;
     f)
       FLOWCELL=$OPTARG
@@ -58,7 +66,6 @@ while getopts ":nhv:s:k:c:f:t:e:g:" opt; do
       ;;
   esac
 done
-
 }
 
 function check_opts() {
@@ -67,19 +74,154 @@ function check_opts() {
       exit 1
    fi
 
-   if [ -z $SAMPLE ]; then
-      echo "must specify a sample name"
-      exit 1
-   fi
-   if [[ $TASSEL_VERSION != 3 && $TASSEL_VERSION != 5 ]]; then
+
+   if [[ $CLIENT_VERSION != 3 && $CLIENT_VERSION != 5 ]]; then
       echo "Tassel version should be 3 or 5"
       exit 1
    fi
-   if [[ $TEMPLATE != "default" && $TEMPLATE != "all" ]]; then
-      echo "template should be default or all"
+   if [[ $TEMPLATE != "default" && $TEMPLATE != "all" && $TEMPLATE != "gbsx" && $TEMPLATE != "files" ]]; then
+      echo "template should be default, all, gbsx or files (default and all are both tassel templates)"
       exit 1
    fi
 
+   if [[ ( -z $SAMPLE ) && ( -z "$GBS_COHORT" ) && ( -z "$ENZYME" ) && ( -z "$FLOWCELL" ) ]]; then
+      answer="n"
+      echo "this will extract the whole keyfile database - are you sure ( listDBKeyfile.sh  -h to see options and examples ) ? (y/n)"
+      read answer
+      if [ "$answer" != "y" ]; then
+         exit 1
+      fi
+   fi
+
+}
+
+function build_extract_script() {
+   sample_phrase=" 1 = 1 "
+   gbs_cohort_phrase=""
+   enzyme_phrase=""
+   extra_fields_phrase=""
+
+
+   script_name=`mktemp --tmpdir listDBKeyfileXXXXX.psql`
+
+   if [ ! -z "$SAMPLE" ]; then
+      sample_phrase=" s.samplename = :keyfilename "
+   fi
+
+   if [ ! -z "$GBS_COHORT" ]; then
+      gbs_cohort_phrase=" and lower(g.gbs_cohort) = lower(:gbs_cohort) "
+   fi
+
+   if [ ! -z "$ENZYME" ]; then
+      enzyme_phrase=" and lower(g.enzyme) = lower(:enzyme) "
+   fi
+  
+   if [ $TEMPLATE == "all" ] ; then
+      extra_fields_phrase=", subjectname"
+   fi    
+   
+   if [[ ( $TEMPLATE == "all" ) || ( $TEMPLATE == "default" ) ]]; then
+      if [ $CLIENT_VERSION == "5" ]; then 
+code="
+select 
+   Flowcell,
+   Lane,
+   Barcode,
+   Sample,
+   PlateName,
+   PlateRow as Row,
+   PlateColumn as Column,
+   LibraryPrepID,
+   Counter,
+   Comment,
+   Enzyme,
+   Species,
+   NumberOfBarcodes,
+   Bifo,
+   Fastq_link,
+   Sample||':'||LibraryPrepID as FullSampleName $extra_fields_phrase
+from 
+   biosampleob s join gbsKeyFileFact g on 
+   g.biosampleob = s.obid
+where 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+order by 
+   factid;
+"
+      elif [ $CLIENT_VERSION == "3" ]; then 
+code="
+select 
+   Flowcell,
+   Lane,
+   Barcode,
+   Sample,
+   PlateName,
+   PlateRow as Row,
+   PlateColumn as Column,
+   LibraryPrepID,
+   Counter,
+   Comment,
+   Enzyme,
+   Species,
+   NumberOfBarcodes,
+   Bifo,
+   Fastq_link $extra_fields_phrase
+from 
+   biosampleob s join gbsKeyFileFact g on 
+   g.biosampleob = s.obid
+where 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+order by 
+   factid;
+"
+      fi 
+   elif [[ ( $TEMPLATE == "gbsx" ) ]]; then
+code="
+select distinct 
+   Sample,
+   Barcode,
+   Enzyme
+from 
+   biosampleob s join gbsKeyFileFact g on 
+   g.biosampleob = s.obid
+where 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+order by 
+   1,2,3;
+"
+   elif [[ ( $TEMPLATE == "files" ) ]]; then
+code="
+select distinct 
+   lane,
+   fastq_link
+from 
+   biosampleob s join gbsKeyFileFact g on 
+   g.biosampleob = s.obid
+where 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+order by 
+   1;
+"
+
+   fi 
+
+   echo "\a" > $script_name
+   echo "\f '\t'" >> $script_name
+   echo "\pset footer off " >> $script_name
+   echo $code >> $script_name
+}
+
+function run_extract() {
+   if [ -z $FLOWCELL ]; then
+      psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f $script_name
+   else
+      psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f $script_name | egrep -i \($FLOWCELL\|flowcell\)  
+   fi
+
+   if [ $? != 0 ]; then
+      echo " looks like extract failed - you might need to set up a .pgpass file in your home folder "
+      exit 1
+   fi 
 }
 
 
@@ -87,72 +229,11 @@ get_opts $@
 
 check_opts
 
+build_extract_script 
 
-############ process the extract ###############
-if [ -z $GBS_COHORT ]; then 
-   if [ -z $ENZYME ]; then 
-      if [ $TASSEL_VERSION  == "3" ]; then
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -f $GBS_BIN/database/extractKeyfile_${TEMPLATE}.psql 
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -f $GBS_BIN/database/extractKeyfile_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)
-         fi
-      else
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -f  $GBS_BIN/database/extractKeyfile5_${TEMPLATE}.psql   
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -f  $GBS_BIN/database/extractKeyfile5_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)  
-         fi
-      fi
-   else
-      if [ $TASSEL_VERSION  == "3" ]; then
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -f $GBS_BIN/database/extractKeyfileForEnzyme_${TEMPLATE}.psql 
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -f $GBS_BIN/database/extractKeyfileForEnzyme_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)
-         fi
-      else
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -f  $GBS_BIN/database/extractKeyfile5ForEnzyme_${TEMPLATE}.psql   
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -f  $GBS_BIN/database/extractKeyfile5ForEnzyme_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)  
-         fi
-      fi
-   fi
-else
-   if [ -z $ENZYME ]; then 
-      if [ $TASSEL_VERSION  == "3" ]; then
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v gbs_cohort=\'$GBS_COHORT\' -f $GBS_BIN/database/extractKeyfileForCohort_${TEMPLATE}.psql 
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v gbs_cohort=\'$GBS_COHORT\' -f $GBS_BIN/database/extractKeyfileForCohort_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)
-         fi
-      else
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v gbs_cohort=\'$GBS_COHORT\' -f  $GBS_BIN/database/extractKeyfile5ForCohort_${TEMPLATE}.psql   
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v gbs_cohort=\'$GBS_COHORT\' -f  $GBS_BIN/database/extractKeyfile5ForCohort_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)  
-         fi
-      fi
-   else
-      if [ $TASSEL_VERSION  == "3" ]; then
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f $GBS_BIN/database/extractKeyfileForEnzymeCohort_${TEMPLATE}.psql 
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f $GBS_BIN/database/extractKeyfileForEnzymeCohort_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)
-         fi
-      else
-         if [ -z $FLOWCELL ]; then
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f  $GBS_BIN/database/extractKeyfile5ForEnzymeCohort_${TEMPLATE}.psql   
-         else
-            psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f  $GBS_BIN/database/extractKeyfile5ForEnzymeCohort_${TEMPLATE}.psql | egrep -i \($FLOWCELL\|flowcell\)  
-         fi
-      fi
-   fi
-fi
+run_extract 
 
 
-if [ $? != 0 ]; then
-   echo " looks like extract failed - you might need to set up a .pgpass file in your home folder "
-   exit 1
-fi 
+
+
+
