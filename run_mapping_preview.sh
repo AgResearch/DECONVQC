@@ -144,7 +144,8 @@ for sample_trimmed_file in `cat ${RUN_ROOT}/lof.txt`; do
 done
 
 
-# do a grand summary  ?
+# do a grand summary  
+$GBS_BIN/summarise_bwa_mappings.sh $RUN $WORKING_FOLDER
 
 set +x 
 

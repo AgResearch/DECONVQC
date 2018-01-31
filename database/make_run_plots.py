@@ -100,6 +100,7 @@ footer1="""
 </td>
 </tr>
 </table>
+
 <h2 id="spreadsheets"> Spreadsheet Summaries and Log Files</h2>
 <table width=60%% align=left>
 <tr>
@@ -159,8 +160,23 @@ pre-GBS Q/C
 </ul>
 </td>
 </tr>
+</table>
+
+<table width="30%%" align=center>
+<tr>
+<td>
+<h2> Mapping Preview Summary  </h2>
+<a href="stats_summary.txt"> Mapping Preview Summary (tab delimited text)</a>
+<br/>
+Mapping Preview Summary Plot:
+<br/>
+<img src="%(run_name)s.processed/mapping_preview/mapping_stats.jpg"/>
+</td>
+</tr>
+</table>
 
 
+<table>
 <tr>
 <td>
 Illumina and other (pre-GBS) log files 
@@ -186,8 +202,10 @@ GBS Q/C log files and results
 </ul>
 </td>
 </tr>
+</table>
 
 
+<table>
 <tr>
 <td>
 <h2 id="references"> References </h2>
