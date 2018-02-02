@@ -18,7 +18,7 @@ listDBKeyfile.sh  -s SQ0566 -t gbsx          # extract everything for SQ0566, GB
 listDBKeyfile.sh  -s SQ0566 -t files         # extract distinct lane + fastq file name for SQ0566 (e.g. to help build GBSX command)\n
 listDBKeyfile.sh  -g deer                    # extract everything that has gbs_cohort = deer (across all runs)\n
 listDBKeyfile.sh  -g deer -e PstI            # extract everything that has gbs_cohort = deer , and enzyme = PstI (across all runs)\n
-listDBKeyfile.sh  -t gbsx -g deer -e PstI    # as above, GBSX format\n
+listDBKeyfile.sh  -t gbsx -g deer -e PstI    # as above, GBSX format \n
 listDBKeyfile.sh  -t files -g deer -e PstI   # as above, report lane + file\n
 listDBKeyfile.sh  -g deer  -f CA95UANXX      # all deer , but only in flowcell CA95UANXX\n
 listDBKeyfile.sh  -f CA95UANXX               # extract everything on flowcell CA95UANXX\n
