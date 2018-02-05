@@ -138,6 +138,7 @@ select
    Species,
    NumberOfBarcodes,
    Bifo,
+   Control,
    Fastq_link,
    Sample||':'||LibraryPrepID as FullSampleName $extra_fields_phrase
 from 
@@ -165,6 +166,7 @@ select
    Species,
    NumberOfBarcodes,
    Bifo,
+   Control,
    Fastq_link $extra_fields_phrase
 from 
    biosampleob s join gbsKeyFileFact g on 
