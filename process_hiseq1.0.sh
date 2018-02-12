@@ -21,8 +21,9 @@ INTERACTIVE=no
 ANALYSIS=bcl2fastq
 RUN=all
 MACHINE=hiseq
+TASK=bcl2fastq
 
-while getopts ":niha:r:m:" opt; do
+while getopts ":niha:r:m:t:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
@@ -38,6 +39,9 @@ while getopts ":niha:r:m:" opt; do
       ;;
     r)
       RUN=$OPTARG
+      ;;
+    t)
+      TASK=$OPTARG
       ;;
     h)
       echo -e $help_text
@@ -81,6 +85,11 @@ if [[ ( $MACHINE != "hiseq" ) && ( $MACHINE != "miseq" ) ]]; then
     exit 1
 fi
 
+# only allow specific anlayses for specific runs
+if [[ ( $TASK != "bcl2fastq" ) && ( $TASK != "dbupdate" ) ]]; then
+    echo "task must be bcl2fastq or dbupdate"
+    exit 1
+fi
 
 # if the machine is miseq , there needs to be a shortcut under the hiseq
 # folder pointing to it. 
@@ -130,6 +139,21 @@ function get_parameters() {
     fi
 }
 
+
+function update_database() {
+   # add the run 
+   echo "** adding Run **"
+   set -x
+   if [ $DRY_RUN == "no" ]; then
+      $GBS_BIN/database/addRun.sh -r $RUN -m $MACHINE
+      $GBS_BIN/database/annotateRun.sh -r $RUN -t Plot_link
+
+   else
+      $GBS_BIN/database/addRun.sh -n -r $RUN -m $MACHINE
+   fi
+}
+
+
 get_opts $@
 
 check_opts
@@ -176,15 +200,20 @@ for completed_run_landmark in $completed_run_landmarks; do
 
    MAKE_TARGET="all"
 
-   if [ $DRY_RUN == "yes" ]; then
-      echo "****** DRY RUN ONLY ******"
-      set -x
-      make -n -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
-   else
-      set -x
-      make -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
-      echo ""
+   if [ $TASK == "bcl2fastq" ]; then 
+      if [ $DRY_RUN == "yes" ]; then
+         echo "****** DRY RUN ONLY ******"
+         set -x
+         make -n -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
+      else
+         set -x
+         make -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
+         echo ""
+      fi
+   elif [ $TASK == "dbupdate" ]; then
+      update_database
    fi
+
 
    # make a precis of the log file for easier reading
    make -f process_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${run}.logprecis > /dev/null 2>&1

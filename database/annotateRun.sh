@@ -51,6 +51,7 @@ while getopts ":nhir:t:" opt; do
 done
 
 RUN_PATH=/dataset/hiseq/scratch/postprocessing/${RUN_NAME}.gbs
+PROCESSED_PATH=/dataset/hiseq/scratch/postprocessing/${RUN_NAME}.processed
 PLOTS_PAGE_PATH="/dataset/hiseq/scratch/postprocessing/${RUN_NAME}_plots.html"
 PLOTS_PAGE_URL="file://isamba/dataset/hiseq/scratch/postprocessing/${RUN_NAME}_plots.html"
 }
@@ -66,10 +67,18 @@ if [ -z "$RUN_NAME" ]; then
    exit 1
 fi
 
-if [ ! -d $RUN_PATH ]; then
-   echo $RUN_PATH not found
-   exit 1
+if [[ ( $TYPE == "all" ) || ( $TYPE == "KGD_diagnostic" ) ]]; then
+   if [ ! -d $RUN_PATH ]; then
+      echo $RUN_PATH not found
+      exit 1
+   fi
+elif [ $TYPE == "Plot_link" ]; then
+   if [ ! -d $PROCESSED_PATH ]; then
+      echo $PROCESSED_PATH not found
+      exit 1
+   fi
 fi
+
 in_db=`$GBS_BIN/database/is_run_in_database.sh $RUN_NAME`
 if [ $in_db != "1" ]; then
    echo "$RUN_NAME has not been set up - quitting"
