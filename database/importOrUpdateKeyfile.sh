@@ -192,8 +192,10 @@ delete from keyfile_temp;
 
 update keyfile_temp set gbs_cohort = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') where gbs_cohort is null;
 update keyfile_temp set gbs_cohort = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') where length(ltrim(rtrim(gbs_cohort))) = 0;
+update keyfile_temp set gbs_cohort = replace(gbs_cohort, ' ', '_');
 update keyfile_temp set enzyme = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') ;
 update keyfile_temp set enzyme = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') ;
+
 
 insert into gbsKeyFileFact (
    biosampleob,
@@ -275,6 +277,7 @@ delete from keyfile_temp;
 
 update keyfile_temp set gbs_cohort = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') where gbs_cohort is null;
 update keyfile_temp set gbs_cohort = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') where length(ltrim(rtrim(gbs_cohort))) = 0;
+update keyfile_temp set gbs_cohort = replace(gbs_cohort, ' ', '_');
 update keyfile_temp set enzyme = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') ;
 update keyfile_temp set enzyme = replace(regexp_replace(regexp_replace(enzyme,'[/&]','-'),'ApeKI-MspI','MspI-ApeKI','i'),'.','_') ;
 
