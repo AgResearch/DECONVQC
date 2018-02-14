@@ -297,7 +297,7 @@ draw_zipfian_plots <- function(datalist, output_folder, zipfian_plot_image_file,
    jpeg(filename = zipfian_plot_image_file, plot_width, plot_height)
    par(mfrow=c(plot_rows, zipfian_plots_per_row))
    for (i in sequence(ncol(datalist$log_rank_data))) {
-      plot(datalist$log_rank_data[,i], datalist$entropy_data[,i],pch='.',main=colnames(datalist$log_rank_data)[i],xlim=c(0,12), ylim=c(8,14))
+      plot(datalist$log_rank_data[,i], datalist$entropy_data[,i],pch='.',main=colnames(datalist$log_rank_data)[i],xlim=c(0,12), ylim=c(6,14))
    }
    dev.off()
 }
@@ -331,7 +331,7 @@ draw_comparison_plot <- function(datalist, output_folder, comparison_plot_image_
 
    jpeg(filename = comparison_plot_image_file, 800,800)
    if (length(comparison_columns) < 30 ) {
-      plot(log_rank_subset, entropy_subset, pch='.', xlim=c(0,12), ylim=c(8,14))
+      plot(log_rank_subset, entropy_subset, pch='.', xlim=c(0,12), ylim=c(6,14))
 
       xmin <- par("usr")[1]
       xmax <- par("usr")[2]
@@ -345,7 +345,7 @@ draw_comparison_plot <- function(datalist, output_folder, comparison_plot_image_
       }
    }
    else {
-      plot(log_rank_subset, entropy_subset, pch='.', xlim=c(0,12), ylim=c(8,14))
+      plot(log_rank_subset, entropy_subset, pch='.', xlim=c(0,12), ylim=c(6,14))
       title(main=paste( colnames(datalist$entropy_data)[1] , "....etc"))
    }
    dev.off()
