@@ -37,7 +37,7 @@ mapping_stats = read.table("stats_summary.txt", header=TRUE, sep="\t")
 mapping_stats <- mapping_stats[order(mapping_stats$map_pct),] 
 
 
-jpeg("mapping_stats.jpg", height=nrow(mapping_stats) *  60, width=800)
+jpeg("mapping_stats.jpg", height=nrow(mapping_stats) *  80, width=800)
 
 
 # ref 
