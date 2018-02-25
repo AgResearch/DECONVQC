@@ -432,15 +432,6 @@ class Distribution(object):
 
         function_space = [dict(map(lambda a,b:(a[j], b[j]), rank_aslist, space_aslist)) for j in range(0,len(point_names))]
 
-        # sample the function at 1,000 evenly space points on the log scale
-        npoint=1000
-        log_max = math.log(max(function_space[0].keys()),2.0)
-        log_min = math.log(min(function_space[0].keys()),2.0)
-        delta = (log_max-log_min )/float(npoint)
-        points = range(0,npoint)
-        
-        
-
         #print "DEBUG"
         #for key in function_space[0].keys():
         #    print function_space[0][key], function_space[1][key], function_space[2][key]
