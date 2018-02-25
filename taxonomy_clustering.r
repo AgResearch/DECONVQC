@@ -1,4 +1,9 @@
 # 
+library(Heatplus)
+library(RColorBrewer)
+library("gplots")
+library("matrixStats")
+
 setwd("/dataset/hiseq/scratch/postprocessing/")
 
 get_command_args <- function() {
@@ -25,12 +30,8 @@ get_command_args <- function() {
    return(run_name)
 }
 
-get_clusters <- function(datamatrix) {
-   num_clust=20   # all 
-   num_clust=20   # euk only
-   clustering <- kmeans(datamatrix, num_clust, iter.max=500)
-   tcenters=t(clustering$centers)
-   distances <- dist(tcenters)
+
+get_species_info <- function(datamatrix) {
    sample_species_table<-read.table("sample_species.txt", header=TRUE, row.names=1, sep="\t")
    species_config_table<-read.table("species_config.txt", header=TRUE, row.names=1, sep="\t")
    sample_names <- strsplit(rownames(t(datamatrix)), split="_")
@@ -58,15 +59,33 @@ get_clusters <- function(datamatrix) {
       point_symbols[ grep(regexp,species_names, ignore.case = TRUE) ] <- symbol
    }
 
+   results=list()
+   results$point_symbols = point_symbols
+   results$point_colours = point_colours
+   results$sample_names = sample_names
+   return(results)
+}
+
+
+
+get_clusters <- function(datamatrix) {
+   num_clust=20   # all 
+   num_clust=20   # euk only
+   clustering <- kmeans(datamatrix, num_clust, iter.max=500)
+   tcenters=t(clustering$centers)
+   distances <- dist(tcenters)
+   
+   species_info <- get_species_info(datamatrix)
+
    distances = dist(as.matrix(t(datamatrix)))
 
    fit <- cmdscale(distances,eig=TRUE, k=2)
 
    results=list()
    results$fit = fit
-   results$point_symbols = point_symbols
-   results$point_colours = point_colours
-   results$sample_names = sample_names
+   results$point_symbols = species_info$point_symbols
+   results$point_colours = species_info$point_colours
+   results$sample_names = species_info$sample_names
 
    return(results)
 }
@@ -94,6 +113,109 @@ stroverlap <- function(x1,y1,s1, x2,y2,s2) {
    return(overlap)
 }
 
+
+draw_heatmap <- function(filename, plot_title, subset_name, taxa_count) {
+   datamatrix<-read.table(filename, header=TRUE, row.names=1, sep="\t")
+
+
+   if(subset_name != "all") {
+      species_info <- get_species_info(datamatrix)
+      #print(nrow(datamatrix))
+      #print(species_info$point_symbols)
+      colnums = sequence(ncol(datamatrix))
+      subset_colnums = subset(colnums, species_info$point_symbols == subset_name)
+      datamatrix = subset(datamatrix, select = subset_colnums) 
+      #print(nrow(datamatrix))
+   }
+
+
+   # want to plot only the "taxa_count" most discriminatory taxa - i.e. 
+   # 100 highest ranking standard deviations.
+   # order the data by the stdev of each row (append the row stdevs 
+   # as a column and sort on that)
+   sdatamatrix <- cbind(datamatrix, rowSds(as.matrix(datamatrix)))
+   #junk <- rowSds(as.matrix(datamatrix))
+   sdatamatrix <- sdatamatrix[order(-sdatamatrix[,ncol(sdatamatrix)]),]
+   sdatamatrix <- head(sdatamatrix, taxa_count)                    # take the first taxa_count
+   sdatamatrix <- sdatamatrix[, sequence(ncol(sdatamatrix)-1)]   # drop the totals column
+
+
+   # draw the heatmap in the usual way
+   #cm<-brewer.pal(11,"Spectral") # a diverging palette
+   cm<-brewer.pal(9,"OrRd") # a sequential palette 
+   cm <- rev(cm)
+
+
+   # set up a vector which will index the column labels that are to be blanked out so that 
+   # only every nth col is labelled, 
+   # the rest empty strings, n=col_label_interval.
+   number_of_column_labels=ncol(sdatamatrix)
+   col_label_interval=max(1, floor(ncol(sdatamatrix)/number_of_column_labels))  # 1=label every location 2=label every 2nd location  etc 
+   colLabels <- colnames(sdatamatrix)
+   colBlankSelector <- sequence(length(colLabels))
+   colBlankSelector <- subset(colBlankSelector, colBlankSelector %% col_label_interval != 0) 
+                       # e.g. will get (2,3, 5,6, 8,9, ..)
+                       # so we will only label rows 1,4,7,10,13 etc)
+
+
+   # set up a vector which will index the row labels that are to be blanked out so that 
+   # only every nth col is labelled, 
+   # the rest empty strings, n=col_label_interval.
+   number_of_row_labels=taxa_count
+   row_label_interval=max(1, floor(nrow(sdatamatrix)/number_of_row_labels))  # 1=label every location 2=label every 2nd location  etc 
+   rowLabels <- rownames(sdatamatrix)
+   rowBlankSelector <- sequence(length(rowLabels))
+   rowBlankSelector <- subset(rowBlankSelector, rowBlankSelector %% row_label_interval != 0) 
+                       # e.g. will get (2,3, 5,6, 8,9, ..)
+                       # so we will only label rows 1,4,7,10,13 etc)
+
+
+   # initial plot to get the column re-ordering
+   jpeg(filename = "hm_internal.jpg" , width=830, height=1200) # with dendrograms
+
+   hm<-heatmap.2(as.matrix(sdatamatrix),  scale = "none", 
+       dendrogram = "col",  
+       trace="none",
+       #trace = "none", breaks =  -2 + 4/9*seq(0,11), 
+       col = cm , key=FALSE, density.info="none", 
+       #keysize=1.0, margin=c(17,25), cexRow=1.5, cexCol=1.6, 
+       keysize=1.0, margin=c(17,28), cexRow=1.5, cexCol=1.8, 
+       lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .6, 0 ), lhei=c(.5, 3))
+
+  dev.off()
+
+
+   # edit the re-ordered vectors of labels, obtained from the heatmap object, so that only 
+   # every nth label on the final plot has a non-empty string
+   # this is for the internal distance matrix
+   indexSelector <- hm$colInd[length(hm$colInd):1]    
+   indexSelector <- indexSelector[colBlankSelector]
+   colLabels[indexSelector] = rep('',length(indexSelector))
+
+   indexSelector <- hm$rowInd[length(hm$rowInd):1]    
+   indexSelector <- indexSelector[rowBlankSelector]
+   rowLabels[indexSelector] = rep('',length(indexSelector))
+
+   jpeg(filename = paste("taxonomy_heatmap_", subset_name, ".jpg", sep=""), width=3000, height=2400) # with dendrograms
+   hm<-heatmap.2(as.matrix(sdatamatrix),  scale = "none", 
+       dendrogram = "col",  
+       trace="none",
+       #trace = "none", breaks =  -2 + 4/9*seq(0,11), 
+       col = cm , key=FALSE, density.info="none", 
+       #keysize=1.0, margin=c(17,25), cexRow=1.5, cexCol=1.6, 
+       keysize=1.0, margin=c(27,28), cexRow=1.5, cexCol=1.3, 
+       lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .6, 0 ), lhei=c(.25, 3),labCol=colLabels, labRow=rowLabels)
+   title(paste(plot_title,"(", taxa_count, " most variable taxa across libraries)", sep=""),  cex.main=2.0)
+   dev.off()
+
+   clust = as.hclust(hm$colDendrogram)
+   write.table(cutree(clust, 1:dim(sdatamatrix)[2]),file=paste("taxonomy_heatmap_", subset_name, "clusters.txt",sep=""), row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
+
+}
+
+
+
+
 plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missing) {
    datamatrix<-read.table(filename, header=TRUE, row.names=1, sep="\t")
    clusters=get_clusters(datamatrix)
@@ -119,7 +241,9 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
    #plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
    plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
 
-   sample_names[1:(length(sample_names)-8)]<-NA
+   #sample_names[1:(length(sample_names)-8)]<-NA
+   sample_names[1:(length(sample_names)-24)]<-NA
+
    title(plot_title, cex.main=1.5)
 
    # this next block of code is to do with avoiding over-plotting the labels
@@ -203,30 +327,56 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
 }
 
 
-run_name<<-get_command_args()
+
+detailed_heatmaps<-function() { 
+   print("plotting fish")
+   draw_heatmap("eukaryota_information.txt", "Fish Samples Taxonomy Overview", "F", 100) 
+   print("plotting ryegrass")
+   draw_heatmap("eukaryota_information.txt", "Ryegrass Samples Taxonomy Overview", "R", 100) 
+   print("plotting mussel")
+   draw_heatmap("eukaryota_information.txt", "Mussel Samples Taxonomy Overview", "M", 100) 
+   print("plotting clover")
+   draw_heatmap("eukaryota_information.txt", "Clover Samples Taxonomy Overview", "T", 100) 
+   print("plotting deer")
+   draw_heatmap("eukaryota_information.txt", "Deer Samples Taxonomy Overview", "D", 100) 
+   print("plotting sheep")
+   draw_heatmap("eukaryota_information.txt", "Sheep Samples Taxonomy Overview", "A", 100) 
+   print("plotting goat")
+   draw_heatmap("eukaryota_information.txt", "Goat Samples Taxonomy Overview", "G", 100) 
+   print("plotting cattle")
+   draw_heatmap("eukaryota_information.txt", "Cattle Samples Taxonomy Overview", "C", 100) 
+   print("plotting seal")
+   draw_heatmap("eukaryota_information.txt", "Seal Samples Taxonomy Overview", "S", 100) 
+   print("plotting pea")
+   draw_heatmap("eukaryota_information.txt", "Pea Samples Taxonomy Overview", "P", 100) 
+   print("plotting weevil")
+   draw_heatmap("eukaryota_information.txt", "Weevil Samples Taxonomy Overview", "W", 100) 
+   #print("plotting endophyte")
+   #draw_heatmap("eukaryota_information.txt", "Endophyte Samples Taxonomy Overview", "E", 100) 
+}
+
+overview<-function() {
+
+   run_name<<-get_command_args()
+   print("plotting overview")
+
+   cex_label=1.0   # this setting used for doing just one of the plots
+   jpeg(filename = paste("euk_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
+   plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE)
+   dev.off()
+
+   jpeg(filename = paste("all_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
+   plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE)
+   dev.off()
+
+   jpeg(filename = paste("xno_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
+   plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE)
+   dev.off()
+}
 
 
-#jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-
-
-# these settings no longer used  - concatenate images outside this script not 
-#jpeg(filename = paste("taxonomy_clustering_",run_name,".jpg",sep=""), 800, 2400)
-#par(mfrow=c(3, 1))
-#cex_label=1.5   
-
-
-cex_label=1.0   # this setting used for doing just one of the plots
-jpeg(filename = paste("euk_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE)
-dev.off()
-
-jpeg(filename = paste("all_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE)
-dev.off()
-
-jpeg(filename = paste("xno_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE)
-dev.off()
+detailed_heatmaps()
+overview()
 
 
 

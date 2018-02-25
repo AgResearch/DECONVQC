@@ -239,6 +239,7 @@ for completed_run_landmark in $completed_run_landmarks; do
          echo $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
          echo "Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN"
          echo "convert $BUILD_ROOT/euk_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/all_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/xno_taxonomy_clustering_${RUN}.jpg  -append $BUILD_ROOT/taxonomy_clustering_${RUN}.jpg"
+         echo "convert $BUILD_ROOT/taxonomy_heatmap_F.jpg  $BUILD_ROOT/taxonomy_heatmap_R.jpg $BUILD_ROOT/taxonomy_heatmap_M.jpg $BUILD_ROOT/taxonomy_heatmap_T.jpg $BUILD_ROOT/taxonomy_heatmap_D.jpg $BUILD_ROOT/taxonomy_heatmap_A.jpg $BUILD_ROOT/taxonomy_heatmap_G.jpg  $BUILD_ROOT/taxonomy_heatmap_C.jpg  $BUILD_ROOT/taxonomy_heatmap_S.jpg  $BUILD_ROOT/taxonomy_heatmap_P.jpg  $BUILD_ROOT/taxonomy_heatmap_W.jpg  -append $BUILD_ROOT/taxonomy_heatmaps.jpg"
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
          echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
          echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
@@ -247,12 +248,12 @@ for completed_run_landmark in $completed_run_landmarks; do
          $GBS_BIN/summarise_global_hiseq_taxonomy.sh $RUN
          Rscript --vanilla $GBS_BIN/taxonomy_clustering.r run_name=$RUN
          convert $BUILD_ROOT/euk_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/all_taxonomy_clustering_${RUN}.jpg $BUILD_ROOT/xno_taxonomy_clustering_${RUN}.jpg  -append $BUILD_ROOT/taxonomy_clustering_${RUN}.jpg
+         convert $BUILD_ROOT/taxonomy_heatmap_F.jpg  $BUILD_ROOT/taxonomy_heatmap_R.jpg $BUILD_ROOT/taxonomy_heatmap_M.jpg $BUILD_ROOT/taxonomy_heatmap_T.jpg $BUILD_ROOT/taxonomy_heatmap_D.jpg $BUILD_ROOT/taxonomy_heatmap_A.jpg $BUILD_ROOT/taxonomy_heatmap_G.jpg  $BUILD_ROOT/taxonomy_heatmap_C.jpg  $BUILD_ROOT/taxonomy_heatmap_S.jpg  $BUILD_ROOT/taxonomy_heatmap_P.jpg  $BUILD_ROOT/taxonomy_heatmap_W.jpg  -append $BUILD_ROOT/taxonomy_heatmaps.jpg
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
          $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
          $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
       fi
    }
-
 
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"

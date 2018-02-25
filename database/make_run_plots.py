@@ -61,11 +61,26 @@ header2="""
 """
 
 footer1="""
-<h2> Blast Result Clustering </h2>
+<h2> Blast Result Clustering</h2>
 <table width="30%%" align=center>
 <tr>
 <td>
+<h3> Overview </h3>
+</td>
+</tr>
+<tr>
+<td>
 %(blast_cluster_plot_link)s
+</td>
+</tr>
+<tr>
+<td>
+<h3> By Species </h3>
+</td>
+</tr>
+<tr>
+<td align="left">
+<img src="taxonomy_heatmaps.jpg" width=1000 height=8800/>
 </td>
 </tr>
 </table>
