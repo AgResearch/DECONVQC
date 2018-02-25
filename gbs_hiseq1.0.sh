@@ -13,6 +13,7 @@ help_text="
  ./gbs_hiseq1.0.sh -i -n -t annotation -r 151124_D00390_0240_AC88WPANXX\n
  ./gbs_hiseq1.0.sh -i -r 161005_D00390_0268_AC9NRJANXX -s SQ2592,SQ2593\n
  ./gbs_hiseq1.0.sh -i -t db_update -r 171026_M02412_0043_000000000-D2N2U -m miseq \n
+ ./gbs_hiseq1.0.sh -i -r 180222_D00390_0347_ACC8WAANXX -k # re-use targets (e.g. can edit *.gbs_temp to remove a problematic cohort)\n
 "
 
 DRY_RUN=no
@@ -21,11 +22,15 @@ TASK=uneak
 RUN=all
 MACHINE=hiseq
 SAMPLE=""
+REUSE_TARGETS="no"
 
-while getopts ":niht:r:m:s:e:" opt; do
+while getopts ":nikht:r:m:s:e:" opt; do
   case $opt in
     n)
       DRY_RUN=yes
+      ;;
+    k)
+      REUSE_TARGETS=yes
       ;;
     i)
       INTERACTIVE=yes
@@ -191,22 +196,30 @@ function get_targets() {
       sample_monikers=`psql -U agrbrdf -d agrbrdf -h invincible -v run=\'$RUN\' -f database/get_run_samples.psql -q`
       for sample_moniker in $sample_monikers; do
          sample_targets="$sample_targets $my_run_root/${sample_moniker}.processed_sample"
-         mkdir -p $RUN_TEMP/${sample_moniker}/uneak_cohorts
-         cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_moniker`
-         for cohort in $cohorts; do
-            echo "" > $RUN_TEMP/${sample_moniker}/uneak_cohorts/$cohort
-         done
+
+         if [ $REUSE_TARGETS != "yes" ]; then 
+            mkdir -p $RUN_TEMP/${sample_moniker}/uneak_cohorts
+            cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_moniker`
+            for cohort in $cohorts; do
+               echo "" > $RUN_TEMP/${sample_moniker}/uneak_cohorts/$cohort
+            done
+         fi
+
       done
    else
       sample_monikers=`echo $SAMPLE | sed 's/,/ /g' -`
       sample_targets=""
       for sample_moniker in $sample_monikers; do
          sample_targets="$sample_targets $my_run_root/${sample_moniker}.processed_sample"
-         mkdir -p $RUN_TEMP/${sample_moniker}/uneak_cohorts
-         cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_moniker`
-         for cohort in $cohorts; do
-            echo "" > $RUN_TEMP/${sample_moniker}/uneak_cohorts/$cohort
-         done
+         
+         if [ $REUSE_TARGETS != "yes" ]; then 
+            mkdir -p $RUN_TEMP/${sample_moniker}/uneak_cohorts
+            cohorts=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name cohorts  --sample $sample_moniker`
+            for cohort in $cohorts; do
+               echo "" > $RUN_TEMP/${sample_moniker}/uneak_cohorts/$cohort
+            done
+         fi
+
       done
    fi
 
@@ -341,7 +354,9 @@ for processed_run_folder in $processed_run_folders; do
 
    RUN_ROOT=${BUILD_ROOT}/${run}.gbs_in_progress
    RUN_TEMP=${BUILD_ROOT}/${run}.gbs_temp
-   rm -rf $RUN_TEMP
+   if [ $REUSE_TARGETS !=  "yes" ]; then
+      rm -rf $RUN_TEMP
+   fi
 
    # if requested, update the database - i.e. import run and keyfiles 
    if [[ ( $TASK == "uneak_and_db_update" ) || ( $TASK == "db_update" ) ]]; then 
