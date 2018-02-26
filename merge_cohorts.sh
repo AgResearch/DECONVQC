@@ -99,7 +99,7 @@ function safe_link() {
    link=$2
    p=`dirname $link` 
    r=`readlink $link`
-   if [ $p == $r ]; then
+   if [ "$p" == "$r" ]; then
       echo "ignoring request to ln -s $real $link as this is circular"
    else
       ln -s $real $link 
