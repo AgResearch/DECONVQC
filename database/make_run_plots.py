@@ -80,7 +80,7 @@ footer1="""
 </tr>
 <tr>
 <td align="left">
-<img src="taxonomy_heatmaps.jpg" width=1000 height=8800/>
+<img src="taxonomy_heatmaps.jpg" width=1000 height=13750/>
 </td>
 </tr>
 </table>
