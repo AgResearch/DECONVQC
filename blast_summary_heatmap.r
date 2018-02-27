@@ -6,7 +6,7 @@ get_command_args <- function() {
    args=(commandArgs(TRUE))
    if(length(args)!=1 ){
       #quit with error message if wrong number of args supplied
-      print('Usage example : Rscript --vanilla  blast_summary_heatmap.r datafolder=/dataset/hiseq/scratch/postprocessing/160623_D00390_0257_AC9B0MANXX.gbs/SQ2559.processed_sample/uneak/kmer_analysis')
+      print('Usage example : /dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript/Rscript --vanilla  blast_summary_heatmap.r datafolder=/dataset/hiseq/scratch/postprocessing/180208_D00390_0345_ACC5V9ANXX.gbs/SQ2701.processed_sample/uneak/blast_analysis')
       print('args received were : ')
       for (e in args) {
          print(e)
@@ -113,6 +113,11 @@ draw_heatmap <- function() {
        #keysize=1.0, margin=c(17,25), cexRow=1.5, cexCol=1.6, 
        keysize=1.0, margin=c(27,28), cexRow=3.0, cexCol=1.2, 
        lmat=rbind(  c(4,3,0 ), c(2, 1, 0) ), lwid=c(.2, .6, 0 ), lhei=c(.25, 3),labCol=colLabels)
+
+
+   clust = as.hclust(hm$colDendrogram)
+   write.table(cutree(clust, 1:dim(as.matrix(clustered_data))[2]),file="sample_blast_summary_clusters.txt", row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
+
 
    dev.off()
 }
