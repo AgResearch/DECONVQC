@@ -115,7 +115,7 @@ set -x
     fi
 
     tag_count=`$GBS_BIN/cat_tag_count.sh -O count "$tag_count_file"`
-    sample_rate=`echo "scale=6; $SAMPLE_SIZE/$tag_count" | bc`
+    sample_rate=`echo "scale=6; if ( ( $SAMPLE_SIZE/$tag_count ) < 1 ) $SAMPLE_SIZE/$tag_count else 1" | bc`
 
     if [ $DRY_RUN == "yes" ]; then
         echo " will execute: 
