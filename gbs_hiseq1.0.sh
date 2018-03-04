@@ -433,14 +433,14 @@ for processed_run_folder in $processed_run_folders; do
       if [ $TASK == "annotation" ]; then
          post_make
       else
-         make -n -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP run_name=$RUN $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
+         make -n -k -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP run_name=$RUN $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
       fi
    else
       set -x
       if [ $TASK == "annotation" ]; then
          post_make
       else
-         make -d -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP run_name=$RUN $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
+         make -d -k -f gbs_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} processed_samples="$sample_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE run_temp=$RUN_TEMP run_name=$RUN $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.log 2>&1
       fi
       if [ $? != 0 ]; then
          echo "(warning non-zero exit status from make)"

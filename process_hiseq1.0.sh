@@ -204,10 +204,10 @@ for completed_run_landmark in $completed_run_landmarks; do
       if [ $DRY_RUN == "yes" ]; then
          echo "****** DRY RUN ONLY ******"
          set -x
-         make -n -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
+         make -n -k -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
       else
          set -x
-         make -d -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
+         make -d -k -f process_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.log 2>&1
          echo ""
       fi
    elif [ $TASK == "dbupdate" ]; then
@@ -216,7 +216,7 @@ for completed_run_landmark in $completed_run_landmarks; do
 
 
    # make a precis of the log file for easier reading
-   make -f process_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${run}.logprecis > /dev/null 2>&1
+   make -k -f process_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${run}.logprecis > /dev/null 2>&1
 
    # make a summary of the versions of software that were run
    #make -f process_hiseq1.0.mk -i --no-builtin-rules versions.log 

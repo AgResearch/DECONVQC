@@ -253,14 +253,14 @@ for processed_run_folder in $processed_run_folders; do
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
       set -x
-      make -n -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
+      make -n -k -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
       post_make
    else
       set -x
       if [ $TASK == "annotation" ]; then
          post_make
       else
-         make -d -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
+         make -d -k -f gbs_qc_hiseq1.0.mk -j 24 --no-builtin-rules machine=${MACHINE} analysis_targets="$analysis_targets" hiseq_root=$HISEQ_ROOT parameters_file=$PARAMETERS_FILE $BUILD_ROOT/$run.${MAKE_TARGET} > $BUILD_ROOT/${run}.gbs.qc.log 2>&1
          if [ $? == 0 ]; then
             post_make
          else

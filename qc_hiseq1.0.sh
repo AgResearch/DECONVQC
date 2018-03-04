@@ -282,13 +282,13 @@ for completed_run_landmark in $completed_run_landmarks; do
    if [ $DRY_RUN == "yes" ]; then
       echo "****** DRY RUN ONLY ******"
       if [ $TASK == "all" ]; then 
-         make -n -d -f qc_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.qc.log 2>&1
+         make -n -d -k -f qc_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.qc.log 2>&1
       fi
       post_make
    else
       set -x
       if [ $TASK == "all" ] ; then
-         make -d -f qc_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.qc.log 2>&1
+         make -d -k -f qc_hiseq1.0.mk -j 24 --no-builtin-rules run=${RUN} machine=${MACHINE} hiseq_root=$HISEQ_ROOT $BUILD_ROOT/${run}.${MAKE_TARGET} > $BUILD_ROOT/${run}.qc.log 2>&1
          if [ $? == 0 ]; then
             post_make
          else
@@ -301,7 +301,7 @@ for completed_run_landmark in $completed_run_landmarks; do
    fi
 
    # make a precis of the log file for easier reading
-   make -f qc_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${run}.qc.logprecis > /dev/null 2>&1
+   make -k -f qc_hiseq1.0.mk -i --no-builtin-rules $BUILD_ROOT/${run}.qc.logprecis > /dev/null 2>&1
 
    # make a summary of the versions of software that were run
    #make -f qc_hiseq1.0.mk -i --no-builtin-rules versions.log 
