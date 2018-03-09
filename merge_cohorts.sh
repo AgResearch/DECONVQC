@@ -138,7 +138,7 @@ function merge_cohorts() {
          echo "merging $1 into $merge_folder"
          cohort_folder=$1
          cohort_moniker=`basename $cohort_folder`
-         cohort_moniker=`echo $cohort_moniker | awk -F. '{print $1}' -`
+         cohort_moniker=`echo $cohort_moniker | awk -F. '{print $1"."$2}' -`
 
          # 1 : handle files in the cohort folder - some are linked (stdout, stderr) , some are concatenated  (TagCounts)
          # create merged tag count stats 

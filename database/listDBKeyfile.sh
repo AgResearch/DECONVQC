@@ -22,6 +22,8 @@ listDBKeyfile.sh  -t gbsx -g deer -e PstI    # as above, GBSX format \n
 listDBKeyfile.sh  -t files -g deer -e PstI   # as above, report lane + file\n
 listDBKeyfile.sh  -g deer  -f CA95UANXX      # all deer , but only in flowcell CA95UANXX\n
 listDBKeyfile.sh  -f CA95UANXX               # extract everything on flowcell CA95UANXX\n
+listDBKeyfile.sh  -s SQ2701 -q uncontaminated      # all the samples flagged as uncontaminated in SQ2701 \n
+listDBKeyfile.sh -s SQ2701 -f CC5V9ANXX -e ApeKI -g Ryegrass -q contaminated_xanthomonas_translucens \n
 listDBKeyfile.sh                             # don't be greedy ! (extract entire keyfile database, ~ 200,000 records)\n
 "
 
@@ -31,8 +33,9 @@ TEMPLATE="default"  # tassel
 ENZYME=""
 GBS_COHORT=""
 SAMPLE=""
+QC_COHORT="all"
 
-while getopts ":nhv:s:k:c:f:t:e:g:" opt; do
+while getopts ":nhv:s:k:c:f:t:e:g:q:" opt; do
   case $opt in
     s)
       SAMPLE=$OPTARG
@@ -48,6 +51,9 @@ while getopts ":nhv:s:k:c:f:t:e:g:" opt; do
       ;;
     g)
       GBS_COHORT=$OPTARG
+      ;;
+    q)
+      QC_COHORT=$OPTARG
       ;;
     t)
       TEMPLATE=$OPTARG
@@ -98,6 +104,7 @@ function check_opts() {
 function build_extract_script() {
    sample_phrase=" 1 = 1 "
    gbs_cohort_phrase=""
+   qc_cohort_phrase=""
    enzyme_phrase=""
    extra_fields_phrase=""
 
@@ -110,6 +117,10 @@ function build_extract_script() {
 
    if [ ! -z "$GBS_COHORT" ]; then
       gbs_cohort_phrase=" and lower(g.gbs_cohort) = lower(:gbs_cohort) "
+   fi
+
+   if [ "$QC_COHORT" != "all" ]; then
+      qc_cohort_phrase=" and lower(g.qc_cohort) = lower(:qc_cohort) "
    fi
 
    if [ ! -z "$ENZYME" ]; then
@@ -145,7 +156,7 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    factid;
 "
@@ -172,7 +183,7 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    factid;
 "
@@ -187,7 +198,7 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    1,2,3;
 "
@@ -200,7 +211,7 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase 
+   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    1;
 "
@@ -215,9 +226,9 @@ order by
 
 function run_extract() {
    if [ -z $FLOWCELL ]; then
-      psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f $script_name
+      psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -v qc_cohort=\'$QC_COHORT\' -f $script_name
    else
-      psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -f $script_name | egrep -i \($FLOWCELL\|flowcell\)  
+      psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -v qc_cohort=\'$QC_COHORT\' -f $script_name | egrep -i \($FLOWCELL\|flowcell\)  
    fi
 
    if [ $? != 0 ]; then

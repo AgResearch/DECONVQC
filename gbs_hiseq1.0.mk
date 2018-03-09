@@ -220,7 +220,8 @@ versions.log:
 	#cd $@/..; cohort=`$(GBS_BIN)/get_processing_parameters.py --parameter_file $(parameters_file) --parameter_name cohorts  --sample $(notdir $*)`; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $$cohort -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	echo "making UFastqToTagCount using cohort $(*F)"
 	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e $(*F) -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
-	cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$2}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
+	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$2}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
+	cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$3}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; $(GBS_BIN)/get_reads_tags_per_sample.py  
 
 %.cohort/Illumina: 
