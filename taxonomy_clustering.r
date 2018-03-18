@@ -51,12 +51,23 @@ get_species_info <- function(datamatrix) {
 
    point_symbols <- rep('?', length(species_names))
    point_count <- 1
+   #print( species_names )
    for(rowname in rownames(species_config_table)) {
       regexp <-  toString(species_config_table[rowname, "regexp"])
       colour <- paste("#", toString(species_config_table[rowname, "colour"]),sep="")
       symbol <- toString(species_config_table[rowname, "symbol"]) 
-      point_colours[ grep(regexp,species_names, ignore.case = TRUE) ] <- colour
-      point_symbols[ grep(regexp,species_names, ignore.case = TRUE) ] <- symbol
+      #print(paste("regexp=",regexp,sep=""))
+      #print( species_names[grep(regexp,species_names, ignore.case = TRUE)] )
+      #point_colours[ grep(regexp,species_names, ignore.case = TRUE) ] <- colour
+      #point_symbols[ grep(regexp,species_names, ignore.case = TRUE) ] <- symbol
+      matches <- grep(regexp,species_names, ignore.case = TRUE, value=FALSE)
+      #print(paste("regexp=",regexp,sep=""))
+      #print(matches)
+      #print( species_names[matches] )
+
+      point_colours[ matches ] <- colour
+      point_symbols[ matches ] <- symbol
+
    }
 
    results=list()
@@ -117,6 +128,11 @@ stroverlap <- function(x1,y1,s1, x2,y2,s2) {
 draw_heatmap <- function(filename, plot_title, subset_name, taxa_count) {
    datamatrix<-read.table(filename, header=TRUE, row.names=1, sep="\t")
 
+   subset_file_suffix = subset_name
+   if ( subset_name == '?' ) {
+      subset_file_suffix = 'misc'
+   }
+      
 
    if(subset_name != "all") {
       species_info <- get_species_info(datamatrix)
@@ -196,7 +212,7 @@ draw_heatmap <- function(filename, plot_title, subset_name, taxa_count) {
    indexSelector <- indexSelector[rowBlankSelector]
    rowLabels[indexSelector] = rep('',length(indexSelector))
 
-   jpeg(filename = paste("taxonomy_heatmap_", subset_name, ".jpg", sep=""), width=3000, height=2400) # with dendrograms
+   jpeg(filename = paste("taxonomy_heatmap_", subset_file_suffix, ".jpg", sep=""), width=3000, height=2400) # with dendrograms
    hm<-heatmap.2(as.matrix(sdatamatrix),  scale = "none", 
        dendrogram = "col",  
        trace="none",
@@ -209,14 +225,14 @@ draw_heatmap <- function(filename, plot_title, subset_name, taxa_count) {
    dev.off()
 
    clust = as.hclust(hm$colDendrogram)
-   write.table(cutree(clust, 1:dim(sdatamatrix)[2]),file=paste("taxonomy_heatmap_", subset_name, "clusters.txt",sep=""), row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
+   write.table(cutree(clust, 1:dim(sdatamatrix)[2]),file=paste("taxonomy_heatmap_", subset_file_suffix, "clusters.txt",sep=""), row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
 
 }
 
 
 
 
-plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missing) {
+plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missing, highlight_this) {
    datamatrix<-read.table(filename, header=TRUE, row.names=1, sep="\t")
    clusters=get_clusters(datamatrix)
 
@@ -232,19 +248,38 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
       sample_names = clusters$sample_names
       point_colours = clusters$point_colours
    }
+   write.table(fit_points,file=paste(save_prefix,run_name,".txt",sep=""),row.names=TRUE,sep="\t")
 
    #print("symbols and colours")
    #print(point_symbols)
    #print(point_colours)
+   cex_vector = rep( 1.2, length(point_symbols))
+   if ( ! is.na(highlight_this) ){
+      cex_vector = rep( 2.5, length(point_symbols))
+      print(paste(" will highlight ", highlight_this, sep=" "))
+      cex_selector=sequence(length(point_symbols))
+      cex_selector = subset(cex_selector, point_symbols != highlight_this)
+      cex_vector[cex_selector] <- 0.5
+
+      print("samples selected:")
+      print(subset(sample_names,  point_symbols == highlight_this))
+      #print(cex_vector)
+   }
 
    #plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols)
    #plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
-   plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
+   #plot.default(fit_points, col=point_colours, cex=1.5, pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
+   plot.default(fit_points, col=point_colours, cex=cex_vector , pch=point_symbols, xlab="", ylab="", cex.axis=1.2, cex.lab=1.2)
 
    #sample_names[1:(length(sample_names)-8)]<-NA
    sample_names[1:(length(sample_names)-24)]<-NA
 
    title(plot_title, cex.main=1.5)
+
+   if ( ! is.na(highlight_this)) {
+      return()
+   }
+
 
    # this next block of code is to do with avoiding over-plotting the labels
    #text(clusters$fit$points, labels = clusters$sample_names, pos = 1, cex=1.5)
@@ -287,8 +322,8 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
          } # plot group has been initialiased
       } # if one of the labels we are to plot 
    } # for each point
-   print(plot_group_labels)
-   print(plot_group_pos)
+   #print(plot_group_labels)
+   #print(plot_group_pos)
                        
 
    #for(i in 1:length( clusters$sample_names )) {
@@ -297,6 +332,13 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
    #   print(paste(clusters$fit$points[i,1], clusters$fit$points[i,2], clusters$sample_names[i]))
    #   text(clusters$fit$points[i,1], y=clusters$fit$points[i,2], labels = clusters$sample_names[i], pos = 4, cex=cex_label)
    #}
+
+
+   # sort the plot group labels in descending order 
+   for(i in 1:length( plot_group_labels )) {
+       plot_group_labels[[i]] <- sort(plot_group_labels[[i]], decreasing=TRUE)
+   }
+
 
    # label each "label-group" , with just one of the labels
    for(i in 1:length( plot_group_labels )) {
@@ -314,9 +356,11 @@ plot_data<-function(filename, plot_title, save_prefix, cex_label, exclude_missin
    key_row_count = 0
    for(i in 1:length( plot_group_labels )) {
       if (length( plot_group_labels[[i]] ) > 1 ) {
-         key_string = paste(plot_group_labels[[i]][1], "(etc.) also includes nearby samples:", sep=" ")
-         key_string = paste(key_string,  paste( plot_group_labels[[i]][2:length( plot_group_labels[[i]])], collapse=","))
-         text(top_left[1] , y=top_left[2] - key_row_count * strheight(key_string) * 1.7, labels=key_string, cex=1.2, pos=4)
+         key_name_string = paste(plot_group_labels[[i]][1], "(etc.) also includes nearby samples:", sep=" ")
+         key_member_string = paste( plot_group_labels[[i]][2:length( plot_group_labels[[i]])], collapse=",")
+         text(top_left[1] , y=top_left[2] - key_row_count * strheight(key_name_string) * 1.7, labels=key_name_string, cex=1.2, pos=4)
+         key_row_count = key_row_count + 1
+         text(top_left[1] , y=top_left[2] - key_row_count * strheight(key_member_string) * 1.7, labels=key_member_string, cex=1.2, pos=4)
          key_row_count = key_row_count + 1
       }
    }
@@ -351,6 +395,8 @@ detailed_heatmaps<-function() {
    draw_heatmap("eukaryota_information.txt", "Pea Samples Taxonomy Overview", "P", 100) 
    print("plotting weevil")
    draw_heatmap("eukaryota_information.txt", "Weevil Samples Taxonomy Overview", "W", 100) 
+   print("plotting misc")
+   draw_heatmap("eukaryota_information.txt", "Other Samples Taxonomy Overview", "?", 100) 
    #print("plotting endophyte")
    #draw_heatmap("eukaryota_information.txt", "Endophyte Samples Taxonomy Overview", "E", 100) 
 }
@@ -362,21 +408,37 @@ overview<-function() {
 
    cex_label=1.0   # this setting used for doing just one of the plots
    jpeg(filename = paste("euk_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-   plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE)
+   plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE, NA)
    dev.off()
 
    jpeg(filename = paste("all_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-   plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE)
+   plot_data("all_information.txt", "Clustering of Blast All-Hit Profiles", "Clustering-of-Blast-All-Hit-Profiles-", cex_label, TRUE, NA)
    dev.off()
 
    jpeg(filename = paste("xno_taxonomy_clustering_",run_name,".jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below 
-   plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE)
+   plot_data("all_information_xnohit.txt", "Clustering of Blast All-Hit Profiles (Excluding 'no hit')", "Clustering-of-Blast-All-Hit-Profiles-Excluding-no-hit-", cex_label, TRUE, NA)
    dev.off()
 }
+
+special<-function() {
+
+   run_name<<-get_command_args()
+   print("plotting overview")
+
+   cex_label=1.0   # this setting used for doing just one of the plots
+   jpeg(filename = paste("euk_taxonomy_clustering_",run_name,"_weevil.jpg",sep=""), 800, 800) # this setting used for doing just one of the three plots below
+   plot_data("eukaryota_information.txt", "Clustering of Blast Eukaryota-Hit Profiles (highlighting weevil)", "Clustering-of-Blast-Eukaryota-Hit-Profiles-", cex_label, TRUE, 'W')
+   dev.off()
+
+}
+
+
 
 
 detailed_heatmaps()
 overview()
+
+#special()
 
 
 

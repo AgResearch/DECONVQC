@@ -251,8 +251,9 @@ for completed_run_landmark in $completed_run_landmarks; do
          jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_S.jpg > $BUILD_ROOT/taxonomy_heatmap_S_90.jpg    
          jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_P.jpg > $BUILD_ROOT/taxonomy_heatmap_P_90.jpg    
          jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_W.jpg > $BUILD_ROOT/taxonomy_heatmap_W_90.jpg    
+         jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_misc.jpg > $BUILD_ROOT/taxonomy_heatmap_misc_90.jpg    
          "
-         echo "convert $BUILD_ROOT/taxonomy_heatmap_F_90.jpg  $BUILD_ROOT/taxonomy_heatmap_R_90.jpg $BUILD_ROOT/taxonomy_heatmap_M_90.jpg $BUILD_ROOT/taxonomy_heatmap_T_90.jpg $BUILD_ROOT/taxonomy_heatmap_D_90.jpg $BUILD_ROOT/taxonomy_heatmap_A_90.jpg $BUILD_ROOT/taxonomy_heatmap_G_90.jpg  $BUILD_ROOT/taxonomy_heatmap_C_90.jpg  $BUILD_ROOT/taxonomy_heatmap_S_90.jpg  $BUILD_ROOT/taxonomy_heatmap_P_90.jpg  $BUILD_ROOT/taxonomy_heatmap_W_90.jpg  -append $BUILD_ROOT/taxonomy_heatmaps.jpg"
+         echo "convert $BUILD_ROOT/taxonomy_heatmap_F_90.jpg  $BUILD_ROOT/taxonomy_heatmap_R_90.jpg $BUILD_ROOT/taxonomy_heatmap_M_90.jpg $BUILD_ROOT/taxonomy_heatmap_T_90.jpg $BUILD_ROOT/taxonomy_heatmap_D_90.jpg $BUILD_ROOT/taxonomy_heatmap_A_90.jpg $BUILD_ROOT/taxonomy_heatmap_G_90.jpg  $BUILD_ROOT/taxonomy_heatmap_C_90.jpg  $BUILD_ROOT/taxonomy_heatmap_S_90.jpg  $BUILD_ROOT/taxonomy_heatmap_P_90.jpg  $BUILD_ROOT/taxonomy_heatmap_W_90.jpg $BUILD_ROOT/taxonomy_heatmap_misc_90.jpg -append $BUILD_ROOT/taxonomy_heatmaps.jpg"
          echo "psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql"
          echo "$GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt"
          echo "$GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt"
@@ -272,7 +273,9 @@ for completed_run_landmark in $completed_run_landmarks; do
          jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_S.jpg > $BUILD_ROOT/taxonomy_heatmap_S_90.jpg    
          jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_P.jpg > $BUILD_ROOT/taxonomy_heatmap_P_90.jpg    
          jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_W.jpg > $BUILD_ROOT/taxonomy_heatmap_W_90.jpg    
-         convert $BUILD_ROOT/taxonomy_heatmap_F_90.jpg  $BUILD_ROOT/taxonomy_heatmap_R_90.jpg $BUILD_ROOT/taxonomy_heatmap_M_90.jpg $BUILD_ROOT/taxonomy_heatmap_T_90.jpg $BUILD_ROOT/taxonomy_heatmap_D_90.jpg $BUILD_ROOT/taxonomy_heatmap_A_90.jpg $BUILD_ROOT/taxonomy_heatmap_G_90.jpg  $BUILD_ROOT/taxonomy_heatmap_C_90.jpg  $BUILD_ROOT/taxonomy_heatmap_S_90.jpg  $BUILD_ROOT/taxonomy_heatmap_P_90.jpg  $BUILD_ROOT/taxonomy_heatmap_W_90.jpg  -append $BUILD_ROOT/taxonomy_heatmaps.jpg
+         jpegtran -rotate 90 $BUILD_ROOT/taxonomy_heatmap_misc.jpg > $BUILD_ROOT/taxonomy_heatmap_misc_90.jpg    
+
+         convert $BUILD_ROOT/taxonomy_heatmap_F_90.jpg  $BUILD_ROOT/taxonomy_heatmap_R_90.jpg $BUILD_ROOT/taxonomy_heatmap_M_90.jpg $BUILD_ROOT/taxonomy_heatmap_T_90.jpg $BUILD_ROOT/taxonomy_heatmap_D_90.jpg $BUILD_ROOT/taxonomy_heatmap_A_90.jpg $BUILD_ROOT/taxonomy_heatmap_G_90.jpg  $BUILD_ROOT/taxonomy_heatmap_C_90.jpg  $BUILD_ROOT/taxonomy_heatmap_S_90.jpg  $BUILD_ROOT/taxonomy_heatmap_P_90.jpg  $BUILD_ROOT/taxonomy_heatmap_W_90.jpg $BUILD_ROOT/taxonomy_heatmap_misc_90.jpg -append $BUILD_ROOT/taxonomy_heatmaps.jpg
          psql -U agrbrdf -d agrbrdf -h invincible -f $GBS_BIN/database/extract_peacock.psql
          $GBS_BIN/database/make_peacock_plots.sh $BUILD_ROOT/peacock_data.txt
          $GBS_BIN/database/make_run_plots.py -r $RUN -o $BUILD_ROOT/${RUN}_plots.html $BUILD_ROOT/peacock_data.txt
