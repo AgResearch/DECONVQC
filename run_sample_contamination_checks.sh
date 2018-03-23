@@ -116,7 +116,7 @@ if [ "$SELECT" != "blast-only" ]; then
       fi
       sample=`basename $folder`
       downstream=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name downstream_processing --sample $sample`
-      if [$downstream == GBS ] ; then
+      if [ "$downstream" == "GBS" ] ; then
          sample_list_file=${RUN_ROOT}/${sample}.list
          echo "adding files under ${BCL2FASTQ_FOLDER}/$sample to $sample_list_file"
          ls ${BCL2FASTQ_FOLDER}/$sample/*.gz >> $sample_list_file 
