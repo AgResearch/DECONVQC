@@ -107,21 +107,23 @@ adapter_to_cut=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETE
 if [ "$SELECT" != "blast-only" ]; then 
    # build a listfile containing fastq files, for each sample  
    rm ${RUN_ROOT}/*.list
-   found_file=0
-   for file in `find ${BCL2FASTQ_FOLDER}/*/ -name "*.fastq.gz" -print `; do 
-      found_file=1
-      sample=`dirname $file`
-      sample=`basename $sample`
-      base=`basename $file`
-      sample_list_file=${RUN_ROOT}/${sample}.list
-      echo "adding $file to $sample_list_file"
-      echo $file >> $sample_list_file 
-   done
 
-   if [ $found_file == 0 ]; then
-      echo "error - no fastq files found under ${BCL2FASTQ_FOLDER}"
-      exit 1
-   fi
+   # only include GBS samples 
+   #for file in `find ${BCL2FASTQ_FOLDER}/*/ -name "*.fastq.gz" -print `; do 
+   for folder in ${BCL2FASTQ_FOLDER}/*; do
+      if [ ! -d $folder ]; then
+         continue
+      fi
+      sample=`basename $folder`
+      downstream=`$GBS_BIN/get_processing_parameters.py --parameter_file $PARAMETERS_FILE --parameter_name downstream_processing --sample $sample`
+      if [$downstream == GBS ] ; then
+         sample_list_file=${RUN_ROOT}/${sample}.list
+         echo "adding files under ${BCL2FASTQ_FOLDER}/$sample to $sample_list_file"
+         ls ${BCL2FASTQ_FOLDER}/$sample/*.gz >> $sample_list_file 
+      else 
+         echo "skipping files under ${BCL2FASTQ_FOLDER}/$sample (downstream is $downstream and we are only processing GBS here)"
+      fi 
+   done
 
    # if necessary launch each sample for trimming
    # make a list of list files sorted by filesize (biggest first) so we can prioritise
