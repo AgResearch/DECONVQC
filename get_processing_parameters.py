@@ -145,10 +145,16 @@ def get_bwa_alignment_references(options):
         best_reference = ''
         species_score_dict  = dict([(key,0) for key in species_references_dict.keys()])
         #print species_score_dict
-        sample_keywords = re.split("\s+", re.sub("GBS", " ", re.sub("_"," ", sample_sheet_dict[sample]))) 
+        sample_keywords = [item for item in re.split("\s+", re.sub("GBS", " ", re.sub("_"," ", sample_sheet_dict[sample]))) if len(item) > 0]
+        if len(sample_keywords) == 0:
+            continue
         for species in species_references_dict:
+            if len(species.strip()) == 0:
+                continue
+            #print "DEBUG testing %s, words %s"%(species, str( sample_keywords))
             species_score_dict[species] = [re.search(key_word, species, re.IGNORECASE) for key_word in sample_keywords]
-            species_score_dict[species] = len([match for match in species_score_dict[species] if match is not None]) 
+            species_score_dict[species] = len([match for match in species_score_dict[species] if match is not None])
+            #print "score: %d"%species_score_dict[species]
         #print species_score_dict
         sorted_species = species_score_dict.keys()
         sorted_species.sort(lambda x,y:cmp(species_score_dict[x], species_score_dict[y]))
@@ -172,6 +178,19 @@ def get_bwa_alignment_references(options):
                 if re.search(species, sample_sheet_dict[unmatched_sample], re.IGNORECASE) is not None:
                     alignment_references[unmatched_sample] = species_references_dict[species]
                     break
+
+
+    # try looking up the other way for unmatched samples, with all spaces stripped out 
+    #print "DEBUG"
+    #print species_references_dict
+    for unmatched_sample in [ sample for sample in alignment_references if alignment_references[sample] == ''] :
+        for species in species_references_dict:
+            if len(species) > 1:
+                #print "DEBUG"
+                #print "matching " + re.sub("\s","",species) + " against " + re.sub("\s","",sample_sheet_dict[unmatched_sample])
+                if re.search(re.sub("\s","",species), re.sub("\s","",sample_sheet_dict[unmatched_sample]), re.IGNORECASE) is not None:
+                    alignment_references[unmatched_sample] = species_references_dict[species]
+                    break                
                 
 
      
