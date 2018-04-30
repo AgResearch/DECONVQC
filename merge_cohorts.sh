@@ -132,6 +132,7 @@ function merge_cohorts() {
    else
       # some initial clean-ups in case we are running this multiple times 
       rm -f $merge_folder/TagCount.csv
+      rm -f $merge_folder/TagCount_unblinded.csv
       rm -f $merge_folder/SampleStats.csv
       rm -f $merge_folder/kgd.stdout
       while [ ! -z "$1" ]; do
@@ -143,6 +144,7 @@ function merge_cohorts() {
          # 1 : handle files in the cohort folder - some are linked (stdout, stderr) , some are concatenated  (TagCounts)
          # create merged tag count stats 
          cat $cohort_folder/TagCount.csv >> $merge_folder/TagCount.csv
+         cat $cohort_folder/TagCount_unblinded.csv >> $merge_folder/TagCount_unblinded.csv
 
          # link stdout and stderr files 
          for suffix in .out .se ; do

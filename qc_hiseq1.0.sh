@@ -153,11 +153,19 @@ function get_parameters() {
     fi
 }
 
+function configure_env() {
+   export PYTHONPATH=/home/mccullocha/git/puppet_with_legacy_tardis/modules/agr/files/agr-scripts
+   export PATH="/home/mccullocha/git/puppet_with_legacy_tardis/modules/agr/files/agr-scripts:$PATH"
+}
+
+
 get_opts $@
 
 check_opts
 
 echo_opts
+
+configure_env
 
 # from here , in line code to do the processing
 RUN_ROOT=${BUILD_ROOT}/${RUN}.processed

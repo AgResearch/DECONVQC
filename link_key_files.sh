@@ -2,8 +2,6 @@
 
 # extracts key file to  a GBS processing folder
 # The argument is the folder in which to link - e.g.
-#### /dataset/hiseq/scratch/postprocessing/150925_D00390_0235_BC6K0YANXX.gbs_in_progress/SQ0123.sample_in_progress/uneak_in_progress/key
-#    /dataset/hiseq/scratch/postprocessing/170413_D00390_0295_BCA5EWANXX.gbs_in_progress/SQ0419.sample_in_progress/uneak_in_progress/PstI.enzyme/key
 #    /dataset/hiseq/scratch/postprocessing/170511_D00390_0302_BCA92MANXX.gbs/SQ0451.processed_sample/uneak/PstI.PstI.enzyme
 
 
@@ -30,7 +28,8 @@ gbs_cohort=`echo $cohort | awk -F. '{print $2}' -`
 qc_cohort=`echo $cohort | awk -F. '{print $1}' -`
 
 
-$GBS_BIN/database/listDBKeyfile.sh -s $libname -f $fcid -e $enzyme -g $gbs_cohort -q $qc_cohort > $1/$key_base
+$GBS_BIN/database/listDBKeyfile.sh -s $libname -f $fcid -e $enzyme -g $gbs_cohort -q $qc_cohort -t qc > $1/$key_base
+$GBS_BIN/database/listDBKeyfile.sh -s $libname -f $fcid -e $enzyme -g $gbs_cohort -q $qc_cohort -t unblind_script  >> $1/../unblind_script.sed
 set +x
 
 exit 0

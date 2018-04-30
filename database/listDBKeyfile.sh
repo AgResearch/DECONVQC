@@ -8,13 +8,16 @@ help_text="\n
 
  Usage: \n
 
- listDBKeyfile.sh [-s sample_name]  [-v client version (e.g. 5 for tassel 5 etc)] [-g gbs_cohort ] [-e enzyme [-t extract template] [ -f flowcell ]\n
+ listDBKeyfile.sh [-s sample_name]  [-v client version (e.g. 5 for tassel 5 etc)] [-g gbs_cohort ] [-e enzyme [-t default|all|gbsx|qc|gbsx_qc|files|unblind|unblind_script] [ -f flowcell ]\n
 \n
 e.g.\n
 listDBKeyfile.sh  -s SQ0566                  # extract everything for SQ0566, default tassel 3 format\n
 listDBKeyfile.sh  -s SQ0566 -v 5             # extract everything for SQ0566, default tassel 5 format\n
 listDBKeyfile.sh  -s SQ0566 -v 5 -t all      # extract everything for SQ0566, extended tassel 5 format (also include subject name)\n
 listDBKeyfile.sh  -s SQ0566 -t gbsx          # extract everything for SQ0566, GBSX format (only include sample, barcode, enzyme)\n
+listDBKeyfile.sh  -s SQ0566 -t qc            # internal primary key used instead of sampleid\n
+listDBKeyfile.sh  -s SQ0566 -t unblind       # dump a mapping between qc_sampleid and lab sampleid \n
+listDBKeyfile.sh  -s SQ0566 -t unblind_script       # dump a sed script to patch qc_sampleid to lab sampleid. Save output to a file and then run as sed -f script_file raw_file > patched_file \n
 listDBKeyfile.sh  -s SQ0566 -t files         # extract distinct lane + fastq file name for SQ0566 (e.g. to help build GBSX command)\n
 listDBKeyfile.sh  -g deer                    # extract everything that has gbs_cohort = deer (across all runs)\n
 listDBKeyfile.sh  -g deer -e PstI            # extract everything that has gbs_cohort = deer , and enzyme = PstI (across all runs)\n
@@ -85,8 +88,8 @@ function check_opts() {
       echo "Tassel version should be 3 or 5"
       exit 1
    fi
-   if [[ $TEMPLATE != "default" && $TEMPLATE != "all" && $TEMPLATE != "gbsx" && $TEMPLATE != "files" ]]; then
-      echo "template should be default, all, gbsx or files (default and all are both tassel templates)"
+   if [[ $TEMPLATE != "default" && $TEMPLATE != "all" && $TEMPLATE != "gbsx" && $TEMPLATE != "files" && $TEMPLATE != "qc" && $TEMPLATE != "gbsx_qc" && $TEMPLATE != "unblind"  && $TEMPLATE != "unblind_script" ]]; then
+      echo "template should be one of default, all, gbsx, gbsx_qc, unblind, unblind_script, files (default and all are both tassel templates)"
       exit 1
    fi
 
@@ -102,7 +105,8 @@ function check_opts() {
 }
 
 function build_extract_script() {
-   sample_phrase=" 1 = 1 "
+   sample_phrase1=" 1 = 1 "
+   sample_phrase2=" sample "
    gbs_cohort_phrase=""
    qc_cohort_phrase=""
    enzyme_phrase=""
@@ -112,7 +116,7 @@ function build_extract_script() {
    script_name=`mktemp --tmpdir listDBKeyfileXXXXX.psql`
 
    if [ ! -z "$SAMPLE" ]; then
-      sample_phrase=" s.samplename = :keyfilename "
+      sample_phrase1=" s.samplename = :keyfilename "
    fi
 
    if [ ! -z "$GBS_COHORT" ]; then
@@ -130,15 +134,19 @@ function build_extract_script() {
    if [ $TEMPLATE == "all" ] ; then
       extra_fields_phrase=", subjectname"
    fi    
+
+   if [[ ( $TEMPLATE == "qc" ) || ( $TEMPLATE == "gbsx_qc" ) ]] ; then
+      sample_phrase2=" qc_sampleid "
+   fi    
    
-   if [[ ( $TEMPLATE == "all" ) || ( $TEMPLATE == "default" ) ]]; then
+   if [[ ( $TEMPLATE == "all" ) || ( $TEMPLATE == "default" ) || ( $TEMPLATE == "qc" ) ]]; then
       if [ $CLIENT_VERSION == "5" ]; then 
 code="
 select 
    Flowcell,
    Lane,
    Barcode,
-   Sample,
+   $sample_phrase2 as sample,
    PlateName,
    PlateRow as Row,
    PlateColumn as Column,
@@ -156,7 +164,7 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
+   $sample_phrase1 $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    factid;
 "
@@ -166,7 +174,7 @@ select
    Flowcell,
    Lane,
    Barcode,
-   Sample,
+   $sample_phrase2 as sample,
    PlateName,
    PlateRow as Row,
    PlateColumn as Column,
@@ -183,22 +191,22 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
+   $sample_phrase1 $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    factid;
 "
       fi 
-   elif [[ ( $TEMPLATE == "gbsx" ) ]]; then
+   elif [[ ( $TEMPLATE == "gbsx" ) || ( $TEMPLATE == "gbsx_qc" ) ]]; then
 code="
 select distinct 
-   Sample,
+   $sample_phrase2 as sample,
    Barcode,
    Enzyme
 from 
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
+   $sample_phrase1 $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    1,2,3;
 "
@@ -211,21 +219,48 @@ from
    biosampleob s join gbsKeyFileFact g on 
    g.biosampleob = s.obid
 where 
-   $sample_phrase $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
+   $sample_phrase1 $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
 order by 
    1;
 "
-
+   elif [[ ( $TEMPLATE == "unblind" ) ]]; then
+code="
+select 
+   qc_sampleid,
+   sample
+from 
+   biosampleob s join gbsKeyFileFact g on 
+   g.biosampleob = s.obid
+where 
+   $sample_phrase1 $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
+order by 
+   1;
+"
+   elif [[ ( $TEMPLATE == "unblind_script" ) ]]; then
+code="
+select
+   's/' || qc_sampleid || '/' || sample || '/g'
+from
+   biosampleob s join gbsKeyFileFact g on
+   g.biosampleob = s.obid
+where
+   $sample_phrase1 $enzyme_phrase $gbs_cohort_phrase $qc_cohort_phrase
+order by
+   1;
+"
    fi 
 
    echo "\a" > $script_name
    echo "\f '\t'" >> $script_name
    echo "\pset footer off " >> $script_name
+   if [  $TEMPLATE == "unblind_script"  ]; then
+      echo "\t" >> $script_name
+   fi
    echo $code >> $script_name
 }
 
 function run_extract() {
-   if [ -z $FLOWCELL ]; then
+   if [[ ( -z $FLOWCELL ) || ( $TEMPLATE == "unblind" ) || ( $TEMPLATE == "unblind_script" ) || ( $TEMPLATE == "gbsx" ) || ( $TEMPLATE == "gbsx_qc" ) ]]; then
       psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -v qc_cohort=\'$QC_COHORT\' -f $script_name
    else
       psql -q -U gbs -d agrbrdf -h invincible -v keyfilename=\'$SAMPLE\' -v enzyme=\'$ENZYME\' -v gbs_cohort=\'$GBS_COHORT\' -v qc_cohort=\'$QC_COHORT\' -f $script_name | egrep -i \($FLOWCELL\|flowcell\)  

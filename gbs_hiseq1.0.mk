@@ -178,8 +178,8 @@ versions.log:
 # The target here supports running the kmer analysis later on as a seperate run after the main gbs analysis is finished
 %.processed_sample/uneak/kmer_analysis/zipfian_distances.jpg:  
 	mkdir -p $(@D)
-	$(GBS_BIN)/kmer_entropy.py -b $(@D) -t zipfian -k 6 -p 1 -o $(@D)/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/zipfian.stdout 2>$(@D)/zipfian.stderr
-	$(GBS_BIN)/kmer_entropy.py -b $(@D) -t frequency -k 6 -p 1 -o $(@D)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/frequency.stdout 2>$(@D)/frequency.stderr
+	$(GBS_BIN)/kmer_prism.py -b $(@D) -t zipfian -k 6 -p 1 -o $(@D)/kmer_summary.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/zipfian.stdout 2>$(@D)/zipfian.stderr
+	$(GBS_BIN)/kmer_prism.py -b $(@D) -t frequency -k 6 -p 1 -o $(@D)/kmer_frequency.txt  -x $(GBS_BIN)/cat_tag_count.sh $(@D)/../tagCounts/*.cnt 1>$(@D)/frequency.stdout 2>$(@D)/frequency.stderr
 	/dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $(GBS_BIN)/kmer_plots_gbs.r datafolder=$(@D) 1>$(@D)/plots.stdout 2>$(@D)/plots.stderr
 
 %.cohort/KGD: %.cohort/hapMap
@@ -223,6 +223,7 @@ versions.log:
 	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$2}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$3}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; $(GBS_BIN)/get_reads_tags_per_sample.py  
+        cd $@/..; sed -f unblind_script.sed TagCounts.csv > TagCounts_unblinded.csv
 
 %.cohort/Illumina: 
 	mkdir -p $@

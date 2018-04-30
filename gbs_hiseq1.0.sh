@@ -125,6 +125,11 @@ function echo_opts() {
 
 function configure_env() {
     module load tassel/3/3.0.173 
+
+    # temporary compatibility setting 
+   export PYTHONPATH=/home/mccullocha/git/puppet_with_legacy_tardis/modules/agr/files/agr-scripts
+   export PATH="/home/mccullocha/git/puppet_with_legacy_tardis/modules/agr/files/agr-scripts:$PATH"
+
 }
 
 function get_parameters() {

@@ -216,7 +216,8 @@ insert into gbsKeyFileFact (
    control,
    windowsize,
    gbs_cohort,
-   fastq_link 
+   fastq_link,
+   voptypeid 
    )
 select
    s.obid,
@@ -237,7 +238,8 @@ select
    control,
    windowsize,
    gbs_cohort,
-   fastq_link
+   fastq_link,
+   93
 from
    biosampleob as s join keyfile_temp as t on
    s.samplename = :samplename and
@@ -264,7 +266,37 @@ from
    (datasourceob ds join biosampleob bs on 
    ds.xreflsid = :keyfilename and bs.samplename = :samplename) join
    importprocedureob ip on ip.xreflsid = 'importKeyfile.sh';
-   
+" >> /tmp/$KEYFILE_BASE.psql
+
+# the next update assigns qc_sampleid to the newly imported samples 
+echo "
+update
+   gbskeyfilefact as g
+set
+   qc_sampleid = q.qcsampleid
+from (
+   select
+      sample,
+      flowcell,
+      libraryprepid,
+      'qc'||min(factid)||'-'||count(*) as qcsampleid
+   from
+      gbskeyfilefact
+   where 
+      qc_sampleid is null and
+      biosampleob = (select obid from
+      biosampleob where samplename = :samplename and
+      sampletype = 'Illumina GBS Library')
+   group by
+      flowcell,
+      sample,
+      libraryprepid 
+) as q
+where
+   g.qc_sampleid is null and 
+   g.sample = q.sample and
+   g.flowcell = q.flowcell and
+   g.libraryprepid = q.libraryprepid ;
 
 " >> /tmp/$KEYFILE_BASE.psql
 
@@ -300,7 +332,8 @@ insert into gbsKeyFileFact (
    control,
    windowsize,
    gbs_cohort,
-   fastq_link
+   fastq_link,
+   voptypeid
    )
 select
    s.obid,
@@ -321,7 +354,8 @@ select
    control,
    windowsize,
    gbs_cohort,
-   fastq_link
+   fastq_link,
+   93
 from
    biosampleob as s join keyfile_temp as t on
    s.samplename = :samplename and
@@ -348,7 +382,37 @@ from
    (datasourceob ds join biosampleob bs on
    ds.xreflsid = :keyfilename and bs.samplename = :samplename) join
    importprocedureob ip on ip.xreflsid = 'importOrUpdateKeyfile.sh';
+" >> /tmp/$KEYFILE_BASE.psql
 
+# the next update assigns qc_sampleid to the newly imported samples
+echo "
+update
+   gbskeyfilefact as g
+set
+   qc_sampleid = q.qcsampleid
+from (
+   select
+      sample,
+      flowcell,
+      libraryprepid,
+      'qc'||min(factid)||'-'||count(*) as qcsampleid
+   from
+      gbskeyfilefact
+   where
+      qc_sampleid is null and
+      biosampleob = (select obid from
+      biosampleob where samplename = :samplename and
+      sampletype = 'Illumina GBS Library')
+   group by
+      flowcell,
+      sample,
+      libraryprepid
+) as q
+where
+   g.qc_sampleid is null and
+   g.sample = q.sample and
+   g.flowcell = q.flowcell and
+   g.libraryprepid = q.libraryprepid ;
 " >> /tmp/$KEYFILE_BASE.psql
 
 
