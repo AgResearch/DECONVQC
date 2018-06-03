@@ -117,6 +117,7 @@ draw_heatmap <- function() {
 
    clust = as.hclust(hm$colDendrogram)
    write.table(cutree(clust, 1:dim(as.matrix(clustered_data))[2]),file="sample_blast_summary_clusters.txt", row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
+   write.table(colnames(clustered_data)[hm$colInd[1:length(hm$colInd)]] , file="samplenames_ordered_as_blast_heatmap.txt",row.names=TRUE,sep="\t") 
 
 
    dev.off()
