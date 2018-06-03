@@ -160,13 +160,22 @@ function get_analyses() {
          fi
       done
    else
-      sample_moniker=$SAMPLE
-      if [[ ( $TASK == "qc" ) || ( $TASK == "kmer_analysis" ) ]]; then
-         analysis_targets="$analysis_targets $my_run_root/${sample_moniker}.processed_sample/uneak/kmer_analysis/zipfian_distances.jpg"
-      fi
-      if [[ ( $TASK == "qc" ) || ( $TASK == "blast_analysis" ) ]]; then
-         analysis_targets="$analysis_targets $my_run_root/${sample_moniker}.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg"
-      fi
+      #sample_moniker=$SAMPLE
+      #if [[ ( $TASK == "qc" ) || ( $TASK == "kmer_analysis" ) ]]; then
+      #   analysis_targets="$analysis_targets $my_run_root/${sample_moniker}.processed_sample/uneak/kmer_analysis/zipfian_distances.jpg"
+      #fi
+      #if [[ ( $TASK == "qc" ) || ( $TASK == "blast_analysis" ) ]]; then
+      #   analysis_targets="$analysis_targets $my_run_root/${sample_moniker}.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg"
+      #fi
+      sample_monikers=`echo $SAMPLE | sed 's/,/ /g' -`
+      for sample_moniker in $sample_monikers; do
+         if [[ ( $TASK == "qc" ) || ( $TASK == "kmer_analysis" ) ]]; then
+            analysis_targets="$analysis_targets $my_run_root/${sample_moniker}.processed_sample/uneak/kmer_analysis/zipfian_distances.jpg"
+         fi
+         if [[ ( $TASK == "qc" ) || ( $TASK == "blast_analysis" ) ]]; then
+            analysis_targets="$analysis_targets $my_run_root/${sample_moniker}.processed_sample/uneak/blast_analysis/sample_blast_summary.jpg"
+         fi
+      done
    fi
 
    echo DEBUG $sample_monikers
