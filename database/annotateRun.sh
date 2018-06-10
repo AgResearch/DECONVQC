@@ -164,8 +164,17 @@ where listname = '${RUN_NAME}';" >> /tmp/${RUN_NAME}.annotation.psql
 }
 
 
+function unblind_kgd_comments() {
+   # generate the update script 
+   psql -U agrbrdf -d agrbrdf -h invincible  -v run_name=\'${RUN_NAME}\' -f $GBS_BIN/database/gen_update_comments.psql 
+   # run the update script 
+   psql -U agrbrdf -d agrbrdf -h invincible  -v run_name=\'${RUN_NAME}\' -f /tmp/update_gbs_comments.psql  
+}
+
+
 if [[ ( $TYPE == "all" ) || ( $TYPE == "KGD_diagnostic" ) ]] ; then
    add_kgd_comments
+   unblind_kgd_comments
 fi
 
 if [[ ( $TYPE == "all" ) || ( $TYPE == "Plot_link" ) ]] ; then

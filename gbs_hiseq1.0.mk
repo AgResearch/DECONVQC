@@ -186,6 +186,7 @@ versions.log:
 	mkdir -p $@
 	touch $@
 	$(GBS_BIN)/run_kgd.sh $@ 
+	$(GBS_BIN)/unblind_kgd.sh $@ 
 
 %.cohort/hapMap: %.cohort/mapInfo
 	mkdir -p $@
@@ -223,7 +224,7 @@ versions.log:
 	#cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$2}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; run_pipeline.pl -Xms512m -Xmx5g -fork1 -UFastqToTagCountPlugin -w ./ -c 1 -e `echo $(*F)|awk -F. '{print $$3}' -`  -s 400000000 -endPlugin -runfork1 > UFastqToTagCount.out 2> UFastqToTagCount.se
 	cd $@/..; $(GBS_BIN)/get_reads_tags_per_sample.py  
-        cd $@/..; sed -f unblind_script.sed TagCounts.csv > TagCounts_unblinded.csv
+	cd $@/..; sed -f unblind_script.sed TagCount.csv > TagCount_unblinded.csv
 
 %.cohort/Illumina: 
 	mkdir -p $@

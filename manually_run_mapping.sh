@@ -6,8 +6,8 @@
 
 #RUN=171208_D00390_0334_BCBE4WANXX
 #RUN=171121_D00390_0333_ACBG2FANXX
-RUN=180119_D00390_0340_AHT555BCXY
-DIR=/dataset/hiseq/scratch/postprocessing/${RUN}.processed/mapping_preview_in_progress 
+RUN=180320_D00390_0353_ACC4MTANXX 
+DIR=/dataset/hiseq/scratch/postprocessing/${RUN}.processed/mapping_preview 
 
 
 export HPC_RESOURCE=local

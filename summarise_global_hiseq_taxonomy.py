@@ -7,7 +7,7 @@ import math
 import re
 import argparse
 from multiprocessing import Pool
-from prbdf import Distribution , build, PROC_POOL_SIZE, from_tab_delimited_file, bin_discrete_value
+from data_prism import Distribution , build, PROC_POOL_SIZE, from_tab_delimited_file, bin_discrete_value
 
 RUN_ROOT="/dataset/hiseq/scratch/postprocessing"
 BUILD_ROOT="/dataset/hiseq/scratch/postprocessing/analysis"

@@ -63,12 +63,12 @@ done
 # do kmer analysis on all  files 
 if [ $DRY_RUN != "no" ]; then 
    echo "
-kmer_entropy.py -t zipfian -k 6 -p 20 -b ${WORKING_FOLDER} -o ${WORKING_FOLDER}/kmer_summary.txt $files_to_analyse
+$GBS_BIN/kmer_prism.py -t zipfian -k 6 -p 20 -b ${WORKING_FOLDER} -o ${WORKING_FOLDER}/kmer_summary.txt $files_to_analyse
 /dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $GBS_BIN/kmer_plots_gbs.r datafolder=${WORKING_FOLDER} 1>${WORKING_FOLDER}/plots.stdout 2>${WORKING_FOLDER}/plots.stderr
    etc. etc.
    "
 else
-   kmer_entropy.py -t zipfian -k 6 -p 20 -b ${WORKING_FOLDER} -o ${WORKING_FOLDER}/kmer_summary.txt $files_to_analyse
+   $GBS_BIN/kmer_prism.py -t zipfian -k 6 -p 20 -b ${WORKING_FOLDER} -o ${WORKING_FOLDER}/kmer_summary.txt $files_to_analyse
    /dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $GBS_BIN/kmer_plots_gbs.r datafolder=${WORKING_FOLDER} 1>${WORKING_FOLDER}/plots.stdout 2>${WORKING_FOLDER}/plots.stderr
 
 
@@ -85,7 +85,7 @@ else
       mv ${WORKING_FOLDER}/kmer_entropy.jpg ${WORKING_FOLDER}/kmer_entropy_all.jpg 
       mv ${WORKING_FOLDER}/kmer_summary.txt ${WORKING_FOLDER}/kmer_summary_all.txt
 
-      kmer_entropy.py -t zipfian -k 6 -p 20 -b ${WORKING_FOLDER} -o ${WORKING_FOLDER}/kmer_summary.txt $gbs_files_to_analyse
+      $GBS_BIN/kmer_prism.py -t zipfian -k 6 -p 20 -b ${WORKING_FOLDER} -o ${WORKING_FOLDER}/kmer_summary.txt $gbs_files_to_analyse
       /dataset/bioinformatics_dev/active/R3.3/R-3.3.0/bin/Rscript --vanilla  $GBS_BIN/kmer_plots_gbs.r datafolder=${WORKING_FOLDER} 1>${WORKING_FOLDER}/plots.stdout 2>${WORKING_FOLDER}/plots.stderr
       mv ${WORKING_FOLDER}/zipfian_distances.jpg ${WORKING_FOLDER}/zipfian_distances_gbs.jpg
       mv ${WORKING_FOLDER}/kmer_zipfian_comparisons.jpg ${WORKING_FOLDER}/kmer_zipfian_comparisons_gbs.jpg 

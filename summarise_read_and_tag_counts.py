@@ -4,7 +4,7 @@ import argparse
 import os
 import re
 import math
-from prbdf import from_csv_file
+from data_prism import from_csv_file
 
 def get_summary(filename):
     """

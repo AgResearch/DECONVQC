@@ -2,7 +2,7 @@
 
 import itertools,os,re,argparse,string,sys
 sys.path.append('/usr/local/agr-scripts')
-from prbdf import Distribution , build, from_tab_delimited_file, bin_discrete_value
+from data_prism import Distribution , build, from_tab_delimited_file, bin_discrete_value
 
 def my_hit_provider(filename, *xargs):
     """
