@@ -283,6 +283,13 @@ draw_entropy_heatmap <- function(datamatrix, output_folder, heatmap_image_file, 
    print(clust$labels)
    sink()
    write.table(cutree(clust, 1:dim(datamatrix)[2]),file="heatmap_sample_clusters.txt",row.names=TRUE,sep="\t")  # ref https://stackoverflow.com/questions/18354501/how-to-get-member-of-clusters-from-rs-hclust-heatmap-2
+ 
+   # output the information matrix with the rows and columns ordered as per the heatmap
+   write.table(datamatrix[hm$rowInd[length(hm$rowInd):1] , hm$colInd[1:length(hm$colInd)]],file="information_sorted_per_heatmap.txt", row.names=TRUE, col.names=TRUE, sep="\t")
+
+
+
+
 }
 
 
