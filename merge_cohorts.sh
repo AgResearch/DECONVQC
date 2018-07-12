@@ -99,6 +99,8 @@ function safe_link() {
    link=$2
    p=`dirname $link` 
    r=`readlink $link`
+   p=`realpath $p`
+   r=`realpath $r`
    if [ "$p" == "$r" ]; then
       echo "ignoring request to ln -s $real $link as this is circular"
    else
@@ -189,6 +191,19 @@ function merge_cohorts() {
    fi
 }
 
+function list_recursive_links() {
+   for file in $CANONICAL_BUILD_ROOT/*.gbs/SQ*/uneak/*cohort*/* ; do
+      # there should not be any shortcuts down there. Any that are there are 
+      # probably circular (e.g. side-effect of re-running a lane)  
+      if [ -h $file ]; then
+         echo " ***** WARNING : looks like $file is a recursive link ? *****"
+      fi
+   done
+}
+
+
+
+
 get_opts $@
 check_opts
 echo_opts
@@ -209,7 +224,5 @@ else
    set +x 
 fi
 
-
-
-
-
+# do a global check for recursive links
+list_recursive_links
